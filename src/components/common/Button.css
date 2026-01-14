@@ -1,0 +1,259 @@
+/* Button コンポーネント - Enhanced with Glassmorphism & Interactions */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border: none;
+  border-radius: var(--radius-lg);
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  transition: var(--transition-base);
+  position: relative;
+  overflow: hidden;
+  box-shadow: var(--shadow-md);
+  font-family: inherit;
+}
+
+.btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0.05) 100%);
+  pointer-events: none;
+  opacity: 0;
+  transition: var(--transition-base);
+}
+
+.btn:hover::before {
+  opacity: 1;
+}
+
+.btn:focus {
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.4), var(--shadow-lg);
+}
+
+.btn:focus-visible {
+  outline: 3px solid var(--primary-500);
+  outline-offset: 2px;
+}
+
+/* リップル効果 */
+.btn__ripple {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.6);
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+}
+
+/* Primary Variant - Glassmorphism */
+.btn--primary {
+  background: linear-gradient(135deg, var(--primary-600) 0%, var(--primary-700) 100%);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.btn--primary:hover:not(.btn--disabled) {
+  background: linear-gradient(135deg, var(--primary-700) 0%, var(--primary-800) 100%);
+  box-shadow: var(--shadow-lg), 0 0 20px rgba(59, 130, 246, 0.3);
+  transform: translateY(-1px);
+}
+
+.btn--primary:active:not(.btn--disabled) {
+  background: linear-gradient(135deg, var(--primary-800) 0%, var(--primary-900) 100%);
+  transform: translateY(0);
+}
+
+/* Secondary Variant */
+.btn--secondary {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(8px);
+  color: var(--secondary-700);
+  border: 1px solid rgba(203, 213, 225, 0.4);
+}
+
+.btn--secondary:hover:not(.btn--disabled) {
+  background: rgba(255, 255, 255, 0.9);
+  color: var(--secondary-900);
+  border-color: rgba(203, 213, 225, 0.6);
+  box-shadow: var(--shadow-lg);
+}
+
+.btn--secondary:active:not(.btn--disabled) {
+  background: rgba(241, 245, 249, 0.95);
+}
+
+/* Danger Variant */
+.btn--danger {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.btn--danger:hover:not(.btn--disabled) {
+  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+  box-shadow: var(--shadow-lg), 0 0 20px rgba(239, 68, 68, 0.3);
+  transform: translateY(-1px);
+}
+
+.btn--danger:active:not(.btn--disabled) {
+  background: linear-gradient(135deg, #b91c1c 0%, #991b1b 100%);
+}
+
+/* Success Variant */
+.btn--success {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.btn--success:hover:not(.btn--disabled) {
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+  box-shadow: var(--shadow-lg), 0 0 20px rgba(16, 185, 129, 0.3);
+  transform: translateY(-1px);
+}
+
+.btn--success:active:not(.btn--disabled) {
+  background: linear-gradient(135deg, #047857 0%, #065f46 100%);
+}
+
+/* Outline Variant */
+.btn--outline {
+  background: transparent;
+  color: var(--primary-600);
+  border: 2px solid var(--primary-600);
+  backdrop-filter: blur(4px);
+}
+
+.btn--outline:hover:not(.btn--disabled) {
+  background: var(--primary-600);
+  color: white;
+  box-shadow: var(--shadow-md), 0 0 15px rgba(59, 130, 246, 0.3);
+}
+
+.btn--outline:active:not(.btn--disabled) {
+  background: var(--primary-700);
+}
+
+/* サイズ - アクセシビリティを考慮した最小サイズ */
+.btn--small {
+  padding: 0.625rem 1.25rem;
+  font-size: 0.875rem;
+  min-height: 40px;
+  /* 44px推奨だが、smallは少し小さめ */
+  border-radius: var(--radius-md);
+}
+
+.btn--medium {
+  padding: 0.875rem 1.75rem;
+  font-size: 1rem;
+  min-height: 48px;
+  /* 推奨最小タップ領域 */
+}
+
+.btn--large {
+  padding: 1.125rem 2.25rem;
+  font-size: 1.125rem;
+  min-height: 56px;
+  border-radius: var(--radius-xl);
+}
+
+/* フルワイズ */
+.btn--full-width {
+  width: 100%;
+}
+
+/* 状態 */
+.btn--disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none !important;
+}
+
+.btn--loading {
+  cursor: wait;
+  opacity: 0.8;
+}
+
+.btn--success-state {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+  box-shadow: var(--shadow-lg), 0 0 25px rgba(16, 185, 129, 0.4);
+}
+
+/* ローディングスピナー */
+.btn__spinner {
+  width: 1.25rem;
+  height: 1.25rem;
+  border: 3px solid transparent;
+  border-top: 3px solid currentColor;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+/* 成功アイコン */
+.btn__success-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+/* コンテンツ */
+.btn__content {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  position: relative;
+  z-index: 1;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* アニメーション - リデュースドモーション対応 */
+@media (prefers-reduced-motion: reduce) {
+
+  .btn,
+  .btn::before,
+  .btn__ripple,
+  .btn__spinner {
+    animation: none;
+    transition: none;
+  }
+
+  .btn:hover,
+  .btn:active {
+    transform: none;
+  }
+}
+
+/* ハイコントラストモード対応 */
+@media (prefers-contrast: high) {
+  .btn {
+    border-width: 2px;
+  }
+
+  .btn--primary,
+  .btn--danger,
+  .btn--success {
+    border-color: currentColor;
+  }
+}

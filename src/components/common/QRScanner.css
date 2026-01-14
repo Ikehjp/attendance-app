@@ -1,0 +1,181 @@
+/* QRスキャナーコンポーネントのスタイル */
+.qr-scanner-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.qr-scanner-modal {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+  max-width: 500px;
+  width: 90%;
+  max-height: 90vh;
+  overflow: hidden;
+  animation: modalSlideIn 0.3s ease-out;
+}
+
+@keyframes modalSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.qr-scanner-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px;
+  border-bottom: 1px solid #e5e7eb;
+  background: #f9fafb;
+}
+
+.qr-scanner-header h2 {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #111827;
+}
+
+.close-button {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  color: #6b7280;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+  line-height: 1;
+}
+
+.close-button:hover {
+  background-color: #f3f4f6;
+  color: #374151;
+}
+
+.qr-scanner-content {
+  padding: 24px;
+}
+
+.error-message {
+  background-color: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #dc2626;
+  padding: 12px 16px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  font-size: 0.875rem;
+}
+
+.scanner-container {
+  text-align: center;
+}
+
+.scanner-container video {
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.scanner-instructions {
+  margin-top: 16px;
+}
+
+.scanner-instructions p {
+  margin: 0 0 16px 0;
+  color: #6b7280;
+  font-size: 0.875rem;
+}
+
+.scanner-start {
+  text-align: center;
+  padding: 40px 20px;
+}
+
+.scanner-icon {
+  font-size: 3rem;
+  margin-bottom: 16px;
+}
+
+.scanner-start p {
+  color: #6b7280;
+  margin-bottom: 24px;
+  line-height: 1.5;
+}
+
+/* レスポンシブデザイン */
+@media (max-width: 640px) {
+  .qr-scanner-modal {
+    width: 95%;
+    margin: 20px;
+  }
+  
+  .qr-scanner-header {
+    padding: 16px 20px;
+  }
+  
+  .qr-scanner-content {
+    padding: 20px;
+  }
+  
+  .scanner-start {
+    padding: 30px 16px;
+  }
+  
+  .scanner-icon {
+    font-size: 2.5rem;
+  }
+}
+
+/* ダークモード対応 */
+@media (prefers-color-scheme: dark) {
+  .qr-scanner-modal {
+    background: #1f2937;
+    color: #f9fafb;
+  }
+  
+  .qr-scanner-header {
+    background: #111827;
+    border-bottom-color: #374151;
+  }
+  
+  .qr-scanner-header h2 {
+    color: #f9fafb;
+  }
+  
+  .close-button {
+    color: #9ca3af;
+  }
+  
+  .close-button:hover {
+    background-color: #374151;
+    color: #f3f4f6;
+  }
+  
+  .error-message {
+    background-color: #1f2937;
+    border-color: #dc2626;
+    color: #fca5a5;
+  }
+  
+  .scanner-instructions p {
+    color: #9ca3af;
+  }
+  
+  .scanner-start p {
+    color: #9ca3af;
+  }
+}

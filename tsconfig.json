@@ -1,0 +1,45 @@
+{
+    "compilerOptions": {
+        /* 基本設定 */
+        "target": "ES2020",
+        "lib": [
+            "DOM",
+            "DOM.Iterable",
+            "ES2020"
+        ],
+        "module": "ESNext",
+        "moduleResolution": "bundler",
+        /* JSX (React 19 対応) */
+        "jsx": "react-jsx",
+        /* JavaScript サポート (インクリメンタル移行用) */
+        "allowJs": true,
+        "checkJs": false,
+        /* 型チェック (緩めに設定 - 段階的に厳格化) */
+        "strict": false,
+        "noImplicitAny": false,
+        "strictNullChecks": false,
+        /* モジュール解決 */
+        "resolveJsonModule": true,
+        "isolatedModules": true,
+        "esModuleInterop": true,
+        "allowSyntheticDefaultImports": true,
+        "forceConsistentCasingInFileNames": true,
+        /* 出力 */
+        "noEmit": true,
+        "skipLibCheck": true,
+        /* パス */
+        "baseUrl": ".",
+        "paths": {
+            "@/*": [
+                "src/*"
+            ]
+        }
+    },
+    "include": [
+        "src"
+    ],
+    "exclude": [
+        "node_modules",
+        "build"
+    ]
+}

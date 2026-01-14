@@ -1,0 +1,520 @@
+/* 学生ダッシュボードページのスタイル */
+.student-dashboard-page {
+  padding: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.student-dashboard-container {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+.dashboard-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.dashboard-header h1 {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 600;
+}
+
+.student-info p {
+  margin: 4px 0;
+  font-size: 14px;
+  opacity: 0.9;
+}
+
+/* セクション共通スタイル */
+.qr-scan-section,
+.invitations-section,
+.groups-section,
+.recent-activity {
+  padding: 24px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.qr-scan-section {
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  color: white;
+  text-align: center;
+}
+
+.section-header {
+  margin-bottom: 20px;
+}
+
+.section-header h2 {
+  margin: 0 0 8px 0;
+  font-size: 20px;
+  font-weight: 600;
+  color: inherit;
+}
+
+.section-header p {
+  margin: 0;
+  font-size: 14px;
+  opacity: 0.8;
+}
+
+/* QRスキャンセクション */
+.qr-scan-section .section-header h2 {
+  color: white;
+}
+
+.qr-scan-section .section-header p {
+  color: white;
+  opacity: 0.9;
+}
+
+.btn--large {
+  padding: 16px 32px;
+  font-size: 16px;
+  font-weight: 600;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  transition: all 0.2s ease;
+}
+
+.btn--large:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+}
+
+/* 招待セクション */
+.invitations-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.invitation-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px;
+  background: #fef3c7;
+  border: 1px solid #f59e0b;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.invitation-card:hover {
+  background: #fde68a;
+  transform: translateY(-1px);
+}
+
+.invitation-info h3 {
+  margin: 0 0 8px 0;
+  color: #92400e;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.invitation-info p {
+  margin: 4px 0;
+  color: #a16207;
+  font-size: 14px;
+}
+
+.invitation-actions {
+  margin-left: 16px;
+}
+
+/* グループセクション */
+.groups-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 20px;
+}
+
+.group-card {
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  overflow: hidden;
+  transition: all 0.2s ease;
+  background: white;
+}
+
+.group-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+}
+
+.group-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  background: #f8f9fa;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.group-card-header h3 {
+  margin: 0;
+  color: #333;
+  font-size: 16px;
+  font-weight: 600;
+  flex: 1;
+}
+
+.group-status {
+  background: #10b981;
+  color: white;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.group-card-content {
+  padding: 20px;
+}
+
+.group-description {
+  margin: 0 0 16px 0;
+  color: #6b7280;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.group-info p {
+  margin: 8px 0;
+  font-size: 14px;
+  color: #374151;
+}
+
+.group-card-footer {
+  padding: 16px 20px;
+  background: #f8f9fa;
+  border-top: 1px solid #e9ecef;
+}
+
+.no-groups {
+  text-align: center;
+  padding: 40px 20px;
+  color: #6b7280;
+}
+
+.no-groups p {
+  margin: 8px 0;
+  font-size: 14px;
+}
+
+/* 最近の活動セクション */
+.activity-card {
+  display: flex;
+  align-items: center;
+  padding: 20px;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 8px;
+}
+
+.activity-icon {
+  font-size: 2rem;
+  margin-right: 16px;
+}
+
+.activity-info h3 {
+  margin: 0 0 8px 0;
+  color: #065f46;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.activity-info p {
+  margin: 4px 0;
+  color: #047857;
+  font-size: 14px;
+}
+
+.activity-time {
+  color: #6b7280 !important;
+  font-size: 12px !important;
+}
+
+/* レスポンシブデザイン */
+@media (max-width: 768px) {
+  .student-dashboard-page {
+    padding: 16px;
+  }
+
+  .dashboard-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .groups-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .invitation-card {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+
+  .invitation-actions {
+    margin-left: 0;
+    width: 100%;
+  }
+
+  .activity-card {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .activity-icon {
+    margin-right: 0;
+    margin-bottom: 12px;
+  }
+}
+
+/* ダークモード対応 */
+@media (prefers-color-scheme: dark) {
+  .student-dashboard-container {
+    background: #1f2937;
+    color: #f9fafb;
+  }
+
+  .dashboard-header {
+    background: linear-gradient(135deg, #4c1d95 0%, #7c3aed 100%);
+  }
+
+  .qr-scan-section {
+    background: linear-gradient(135deg, #be185d 0%, #ec4899 100%);
+  }
+
+  .group-card {
+    background: #1f2937;
+    border-color: #374151;
+  }
+
+  .group-card-header,
+  .group-card-footer {
+    background: #111827;
+    border-color: #374151;
+  }
+
+  .group-card-header h3 {
+    color: #f9fafb;
+  }
+
+  .group-info p {
+    color: #d1d5db;
+  }
+
+  .invitation-card {
+    background: #451a03;
+    border-color: #d97706;
+  }
+
+  .invitation-info h3 {
+    color: #fbbf24;
+  }
+
+  .invitation-info p {
+    color: #f59e0b;
+  }
+
+  .activity-card {
+    background: #064e3b;
+    border-color: #065f46;
+  }
+
+  .activity-info h3 {
+    color: #a7f3d0;
+  }
+
+  .activity-info p {
+    color: #6ee7b7;
+  }
+
+  .no-groups {
+    color: #9ca3af;
+  }
+}
+
+/* 出席結果モーダル */
+.attendance-result-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: fadeIn 0.2s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+.attendance-result-modal {
+  background: white;
+  border-radius: 20px;
+  padding: 32px;
+  max-width: 400px;
+  width: 90%;
+  text-align: center;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px) scale(0.95);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.attendance-result-modal.present {
+  border-top: 6px solid #10b981;
+}
+
+.attendance-result-modal.late {
+  border-top: 6px solid #f59e0b;
+}
+
+.result-icon {
+  font-size: 4rem;
+  margin-bottom: 16px;
+}
+
+.result-title {
+  margin: 0 0 8px 0;
+  font-size: 2rem;
+  font-weight: 700;
+}
+
+.attendance-result-modal.present .result-title {
+  color: #059669;
+}
+
+.attendance-result-modal.late .result-title {
+  color: #d97706;
+}
+
+.result-message {
+  color: #6b7280;
+  font-size: 1rem;
+  margin: 0 0 24px 0;
+}
+
+.result-details {
+  background: #f9fafb;
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 24px;
+}
+
+.detail-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 0;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.detail-row:last-child {
+  border-bottom: none;
+}
+
+.detail-label {
+  color: #6b7280;
+  font-size: 0.875rem;
+}
+
+.detail-value {
+  color: #111827;
+  font-weight: 600;
+  font-size: 0.875rem;
+}
+
+.result-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.result-actions .btn {
+  padding: 12px 24px;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 120px;
+}
+
+.result-actions .btn-primary {
+  background: #3b82f6;
+  color: white;
+}
+
+.result-actions .btn-primary:hover {
+  background: #2563eb;
+}
+
+.result-actions .btn-warning {
+  background: #f59e0b;
+  color: white;
+}
+
+.result-actions .btn-warning:hover {
+  background: #d97706;
+}
+
+/* ダークモード対応 - 出席結果モーダル */
+@media (prefers-color-scheme: dark) {
+  .attendance-result-modal {
+    background: #1f2937;
+    color: #f9fafb;
+  }
+
+  .result-message {
+    color: #9ca3af;
+  }
+
+  .result-details {
+    background: #374151;
+  }
+
+  .detail-row {
+    border-color: #4b5563;
+  }
+
+  .detail-label {
+    color: #9ca3af;
+  }
+
+  .detail-value {
+    color: #f9fafb;
+  }
+}

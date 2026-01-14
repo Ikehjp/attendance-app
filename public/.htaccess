@@ -1,0 +1,14 @@
+<IfModule mod_headers.c>
+  # Service Worker と index.html はキャッシュしない
+  <FilesMatch "^(sw\.js|service-worker\.js|index\.html)$">
+    Header set Cache-Control "no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0"
+    Header set Pragma "no-cache"
+    Header set Expires "0"
+  </FilesMatch>
+
+  # その他の静的アセット（JS, CSS, 画像）はキャッシュしてOK
+  <FilesMatch "\.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot)$">
+    # sw.jsなどは上記で除外済み
+    Header set Cache-Control "public, max-age=31536000, immutable"
+  </FilesMatch>
+</IfModule>

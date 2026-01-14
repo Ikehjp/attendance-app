@@ -1,0 +1,31 @@
+.skeleton-base {
+    background-color: #e5e7eb;
+    /* tailwind gray-200 */
+    border-radius: 4px;
+}
+
+.skeleton-text-container {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+}
+
+.skeleton-text-line {
+    border-radius: 4px;
+}
+
+.skeleton-rect {
+    border-radius: 8px;
+}
+
+.skeleton-circle {
+    border-radius: 50%;
+}
+
+/* ダークモード対応 (将来用) */
+@media (prefers-color-scheme: dark) {
+    .skeleton-base {
+        background-color: #374151;
+        /* tailwind gray-700 */
+    }
+}

@@ -1,0 +1,7 @@
+=== ユーザー一覧 ===
+ID: 1 | Name: 管理者 | Email: admin@example.com | Role: admin | StudentID: N/A | OrgID: null
+ID: 2 | Name: 田中太郎 | Email: tanaka@example.com | Role: employee | StudentID: N/A | OrgID: null
+ID: 3 | Name: test | Email: test@test.com | Role: student | StudentID: 0000 | OrgID: null
+ID: 4 | Name: tset | Email: test00@test.com | Role: student | StudentID: N/A | OrgID: 1
+ID: 5 | Name: testadmin | Email: testadmin@admin.com | Role: owner | StudentID: N/A | OrgID: 2
+ID: 6 | Name: teststudent | Email: teststudent@student.com | Role: student | StudentID: 000003 | OrgID: 2

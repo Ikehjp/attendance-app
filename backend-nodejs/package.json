@@ -1,0 +1,61 @@
+{
+  "name": "attendance-app-backend",
+  "version": "1.0.0",
+  "description": "出欠管理システム Node.js バックエンド",
+  "main": "server.js",
+  "scripts": {
+    "start": "npx kill-port 3001 && node server.js",
+    "dev": "npx kill-port 3001 && nodemon server.js",
+    "test": "jest",
+    "migrate": "node scripts/migrate.js run",
+    "migrate:status": "node scripts/migrate.js status",
+    "migrate:rollback": "node scripts/migrate.js rollback",
+    "migrate:create": "node scripts/migrate.js create",
+    "db:migrate": "node migrations/run_migration.js",
+    "migrate:events": "node scripts/run-events-migration.js",
+    "seed": "node scripts/seed.js"
+  },
+  "keywords": [
+    "attendance",
+    "management",
+    "nodejs",
+    "express",
+    "mysql"
+  ],
+  "author": "Attendance App Team",
+  "license": "MIT",
+  "dependencies": {
+    "axios": "^1.13.2",
+    "bcrypt": "^6.0.0",
+    "bcryptjs": "^2.4.3",
+    "compression": "^1.7.4",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.5",
+    "dotenv": "^16.6.1",
+    "express": "^4.18.2",
+    "express-rate-limit": "^7.1.5",
+    "express-validator": "^7.0.1",
+    "helmet": "^7.1.0",
+    "joi": "^17.11.0",
+    "jsonwebtoken": "^9.0.2",
+    "moment": "^2.29.4",
+    "multer": "^1.4.5-lts.1",
+    "mysql2": "^3.6.5",
+    "qrcode": "^1.5.3",
+    "uuid": "^9.0.1",
+    "winston": "^3.11.0",
+    "xlsx": "https://cdn.sheetjs.com/xlsx-latest/xlsx-latest.tgz"
+  },
+  "devDependencies": {
+    "@types/jest": "^29.5.8",
+    "jest": "^29.7.0",
+    "nodemon": "^3.0.2",
+    "supertest": "^6.3.4",
+    "swagger-jsdoc": "^6.2.8",
+    "swagger-ui-express": "^5.0.1"
+  },
+  "engines": {
+    "node": ">=16.0.0",
+    "npm": ">=8.0.0"
+  }
+}

@@ -1,0 +1,34 @@
+﻿
+> attendance-app@0.1.0 build
+> react-scripts build
+
+node.exe : [baseline-brows
+er-mapping] The data in th
+is module is over two mont
+hs old.  To ensure accurat
+e Baseline data, please up
+date: `npm i baseline-brow
+ser-mapping@latest -D`
+発生場所 行:1 文字:1
++ & "C:\Program Files\node
+js/node.exe" "C:\Program F
+iles\nodejs/node_mo ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo        
+      : NotSpecified: ([  
+  baseline-brows...ping   
+ @latest -D`:String) [    
+], RemoteException
+    + FullyQualifiedError 
+   Id : NativeCommandErr  
+  or
+ 
+(node:63692) [DEP0176] Dep
+recationWarning: fs.F_OK i
+s deprecated, use fs.const
+ants.F_OK instead
+(Use `node --trace-depreca
+tion ...` to show where th
+e warning was created)

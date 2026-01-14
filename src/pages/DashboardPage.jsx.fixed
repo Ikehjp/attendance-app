@@ -1,0 +1,335 @@
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import useAuthStore from '../stores/authStore';
+import { attendanceApi } from '../api/attendanceApi';
+import Button from '../components/common/Button';
+import CalendarPage from './CalendarPage';
+import AdminDashboardView from '../components/AdminDashboardView';
+import TeacherDashboardView from '../components/TeacherDashboardView';
+import './DashboardPage.css';
+
+/**
+ * ロール別ダチE��ュボ�Eド�Eージ
+ * - admin: AdminDashboardView
+ * - teacher: TeacherDashboardView
+ * - employee/student: 従来の従業員ダチE��ュボ�EチE
+ */
+const DashboardPage = () => {
+  const { user } = useAuthStore();
+
+  // ロールに応じたビューを表示
+  if (!user) {
+    return (
+      <div className="dashboard-page">
+        <div className="dashboard-loading">
+          <div className="spinner"></div>
+          <p>ユーザー惁E��を読み込んでぁE��ぁE..</p>
+        </div>
+      </div>
+    );
+  }
+
+  // 管琁E��E��チE��ュボ�EチE
+  if (user.role === 'admin') {
+    return <AdminDashboardView />;
+  }
+
+  // 教員ダチE��ュボ�EチE
+  if (user.role === 'teacher') {
+    return <TeacherDashboardView />;
+  }
+
+  // 従業員/学生ダチE��ュボ�Eド（既存�E実裁E��E
+  return <EmployeeDashboard user={user} />;
+};
+
+/**
+ * 従業員ダチE��ュボ�Eド（既存�E実裁E��維持E��E
+ */
+const EmployeeDashboard = ({ user }) => {
+  const [attendanceData, setAttendanceData] = useState({
+    todayStatus: null,
+    weeklyStats: null,
+    monthlyStats: null,
+    annualStats: null,
+  });
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  const loadDashboardData = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+
+      if (!user || !user.id) {
+        setIsLoading(false);
+        return;
+      }
+
+      const today = new Date();
+      const userId = user.id;
+
+      // 今日の出欠状況を取征E
+      const todayResponse = await attendanceApi.getAttendanceRecords(userId, {
+        date: today.toISOString().split('T')[0],
+      });
+
+      // 統計を取征E
+      const weeklyResponse = await attendanceApi.getAttendanceStats(userId, 'week');
+      const monthlyResponse = await attendanceApi.getAttendanceStats(userId, 'month');
+      const annualResponse = await attendanceApi.getAttendanceStats(userId, 'year');
+
+      const records = (todayResponse.success && todayResponse.data && Array.isArray(todayResponse.data.records))
+        ? todayResponse.data.records
+        : [];
+
+      setAttendanceData({
+        todayStatus: records.length > 0 ? records[0] : null,
+        weeklyStats: weeklyResponse.success ? weeklyResponse.data : null,
+        monthlyStats: monthlyResponse.success ? monthlyResponse.data : null,
+        annualStats: annualResponse.success ? annualResponse.data : null,
+      });
+    } catch (err) {
+      console.error('ダチE��ュボ�Eドデータ読み込みエラー:', err);
+      setError('チE�Eタの読み込みに失敗しました');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [user]);
+
+  useEffect(() => {
+    if (user?.id) {
+      loadDashboardData();
+    }
+  }, [user, loadDashboardData]);
+
+  const handleAttendanceAction = useCallback(async (action, recordId = null) => {
+    try {
+      setIsLoading(true);
+      setError(null);
+
+      if (!user || !user.id) {
+        setError('ユーザー惁E��が見つかりません');
+        setIsLoading(false);
+        return;
+      }
+
+      const response = await attendanceApi.recordAttendance(user.id, action, recordId);
+
+      if (response.success) {
+        loadDashboardData();
+      } else {
+        setError(response.message || '操作に失敗しました');
+      }
+    } catch (err) {
+      console.error('出欠操作エラー:', err);
+      setError('操作中にエラーが発生しました');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [user, loadDashboardData]);
+
+  const todayStatusDisplay = useMemo(() => {
+    const status = attendanceData.todayStatus;
+    if (!status) return '未登録';
+
+    switch (status.status) {
+      case 'present':
+        return '出勤中';
+      case 'absent':
+        return '欠勤';
+      case 'late':
+        return '遁E��';
+      case 'early_departure':
+        return '早退';
+      case 'break':
+        return '休�E中';
+      default:
+        return '不�E';
+    }
+  }, [attendanceData.todayStatus]);
+
+  if (isLoading && !attendanceData.todayStatus) {
+    return (
+      <div className="dashboard-page">
+        <div className="dashboard-loading">
+          <div className="spinner"></div>
+          <p>ダチE��ュボ�Eドを読み込んでぁE��ぁE..</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="dashboard-page">
+        <div className="dashboard-container">
+          <div className="error-message">
+            {error}
+            <button onClick={loadDashboardData} className="retry-button">
+              再試衁E
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="dashboard-page">
+      <div className="dashboard-container">
+        <div className="dashboard-header">
+          <h1 className="dashboard-title">ダチE��ュボ�EチE/h1>
+          <p className="dashboard-subtitle">{user?.name}さん、よぁE��ぁE/p>
+        </div>
+
+        <div className="dashboard-grid">
+          {/* 今日の出欠 */}
+          <div className="dashboard-card today-status">
+            <h2 className="card-title">今日の状況E/h2>
+            <div className="status-display">
+              <span className={`status-badge status-${attendanceData.todayStatus?.status || 'unknown'}`}>
+                {todayStatusDisplay}
+              </span>
+            </div>
+            {attendanceData.todayStatus && (
+              <div className="attendance-times">
+                <div className="time-item">
+                  <span className="time-label">出勤:</span>
+                  <span className="time-value">
+                    {attendanceData.todayStatus.check_in_time || '---'}
+                  </span>
+                </div>
+                <div className="time-item">
+                  <span className="time-label">退勤:</span>
+                  <span className="time-value">
+                    {attendanceData.todayStatus.check_out_time || '---'}
+                  </span>
+                </div>
+              </div>
+            )}
+
+            <div className="attendance-actions">
+              <Button
+                variant="primary"
+                onClick={() => handleAttendanceAction('checkin')}
+                className="action-button"
+                disabled={isLoading}
+              >
+                出勤
+              </Button>
+              <Button
+                variant="secondary"
+                onClick={() => handleAttendanceAction('checkout')}
+                className="action-button"
+                disabled={isLoading}
+              >
+                退勤
+              </Button>
+            </div>
+          </div>
+
+          {/* 月間サマリー */}
+          <div className="dashboard-card">
+            <h2 className="card-title">月間サマリー</h2>
+            <div className="stats-grid">
+              <div className="stat-item">
+                <span className="stat-label">出勤日数</span>
+                <span className="stat-value">
+                  {attendanceData.monthlyStats?.presentDays || 0}日
+                </span>
+              </div>
+              <div className="stat-item">
+                <span className="stat-label">遁E��日数</span>
+                <span className="stat-value">
+                  {attendanceData.monthlyStats?.lateDays || 0}日
+                </span>
+              </div>
+              <div className="stat-item">
+                <span className="stat-label">欠勤日数</span>
+                <span className="stat-value">
+                  {attendanceData.monthlyStats?.absentDays || 0}日
+                </span>
+              </div>
+              <div className="stat-item">
+                <span className="stat-label">早退日数</span>
+                <span className="stat-value">
+                  {attendanceData.monthlyStats?.earlyDepartureDays || 0}日
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* カレンダー */}
+          <div className="dashboard-card calendar-card">
+            <h2 className="card-title">出欠カレンダー</h2>
+            <div className="calendar-wrapper">
+              <CalendarPage isDashboardMode={true} />
+            </div>
+          </div>
+
+          {/* 年間統訁E*/}
+          <div className="dashboard-card">
+            <h2 className="card-title">年間統訁E/h2>
+            <div className="stats-grid">
+              <div className="stat-item">
+                <span className="stat-label">総�E勤日数</span>
+                <span className="stat-value">
+                  {attendanceData.annualStats?.presentDays || 0}日
+                </span>
+              </div>
+              <div className="stat-item">
+                <span className="stat-label">総遅刻日数</span>
+                <span className="stat-value">
+                  {attendanceData.annualStats?.lateDays || 0}日
+                </span>
+              </div>
+              <div className="stat-item">
+                <span className="stat-label">総欠勤日数</span>
+                <span className="stat-value">
+                  {attendanceData.annualStats?.absentDays || 0}日
+                </span>
+              </div>
+              <div className="stat-item">
+                <span className="stat-label">早退日数</span>
+                <span className="stat-value">
+                  {attendanceData.annualStats?.earlyDepartureDays || 0}日
+                </span>
+              </div>
+              <div className="stat-item">
+                <span className="stat-label">総勤務時閁E/span>
+                <span className="stat-value">
+                  {attendanceData.annualStats?.totalHours || 0}時間
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* クイチE��アクション */}
+          <div className="dashboard-card">
+            <h2 className="card-title">クイチE��アクション</h2>
+            <div className="quick-actions">
+              <Button
+                variant="outline"
+                onClick={() => window.location.href = '/calendar'}
+                className="action-button"
+              >
+                カレンダー表示
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => window.location.href = '/reports'}
+                className="action-button"
+              >
+                レポ�Eト表示
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+DashboardPage.displayName = 'DashboardPage';
+
+export default DashboardPage;
