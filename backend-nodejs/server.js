@@ -31,7 +31,19 @@ log('========================================\n');
 function loadRoute(routeName, routePath) {
   try {
     log(`✓ ルート読み込み: ${routeName} (${routePath})`);
-    return require(routePath);
+    const route = require(routePath);
+
+    // ExpressのRouter/Middlewareは関数であるはず
+    if (typeof route !== 'function') {
+      const type = typeof route;
+      const msg = `ルート読み込みエラー: ${routeName} (${routePath}) は関数(Router)をエクスポートしていません。現在の型: ${type}`;
+      // オブジェクトの場合は内容もログに出す（循環参照の場合は空オブジェクト {} になることが多い）
+      if (type === 'object') {
+        log(`  内容: ${JSON.stringify(route)}`);
+      }
+      throw new Error(msg);
+    }
+    return route;
   } catch (error) {
     errorLog(`✗ ルート読み込み失敗: ${routeName}`, error);
     throw error;
@@ -65,6 +77,12 @@ try {
   const ipSettingsRoutes = loadRoute('IP Settings', './routes/ip-settings');
 
   log('\n✅ 全ルートの読み込み完了\n');
+
+  // デバッグ: ルートオブジェクトの型を確認
+  log(`Debug: authRoutes is ${typeof authRoutes}`);
+  log(`Debug: adminRoutes is ${typeof adminRoutes}`);
+  log(`Debug: ipSettingsRoutes is ${typeof ipSettingsRoutes}`);
+
 
   // Swaggerのセットアップ
   // const { swaggerUi, specs } = require('./config/swagger');
