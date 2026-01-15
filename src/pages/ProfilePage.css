@@ -72,6 +72,10 @@
   border: 3px solid rgba(255, 255, 255, 0.3);
 }
 
+.profile-basic-info {
+  flex: 1;
+}
+
 .profile-basic-info h2 {
   margin: 0 0 8px 0;
   font-size: 1.5rem;
@@ -276,21 +280,57 @@
   }
 }
 
-/* --- 以下のコードを ProfilePage.css の末尾に追記 --- */
-
-/* 入力フィールド */
+/* 入力フィールド（モダンSaaSスタイル） */
 .edit-input {
   width: 100%;
-  padding: 8px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  background-color: white;
-  color: #111827;
+  padding: 10px 12px;
+  border: 1px solid var(--secondary-200, #e2e8f0);
+  border-radius: var(--radius-md, 0.375rem);
+  background-color: #ffffff;
+  color: var(--text-primary, #111827);
+  font-size: 1rem;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: var(--shadow-sm, 0 1px 2px 0 rgba(0, 0, 0, 0.05));
 }
 
+.edit-input:hover {
+  border-color: var(--secondary-400, #94a3b8);
+}
+
+.edit-input:focus {
+  outline: none;
+  border-color: var(--primary-500, #3b82f6);
+  box-shadow: 0 0 0 3px var(--primary-100, #dbeafe);
+}
+
+/* お名前入力欄（ヘッダー内・ガラス風スタイル） */
 .edit-input--name {
   font-size: 1.5rem;
   font-weight: 600;
+  padding: 8px 12px;
+  margin-bottom: 8px;
+  /* ガラス風スタイル */
+  background-color: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: #ffffff;
+  backdrop-filter: blur(4px);
+  text-shadow: 0 1px 2px rgba(0,0,0,0.1);
+}
+
+.edit-input--name::placeholder {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.edit-input--name:hover {
+  background-color: rgba(255, 255, 255, 0.25);
+  border-color: rgba(255, 255, 255, 0.5);
+}
+
+.edit-input--name:focus {
+  background-color: rgba(255, 255, 255, 0.3);
+  border-color: #ffffff;
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.2);
+  outline: none;
 }
 
 /* ロール変更セクション */
@@ -312,7 +352,6 @@
   margin-top: 10px;
 }
 
-
 /* ロール変更モーダル */
 .role-modal-overlay {
   position: fixed;
@@ -325,6 +364,8 @@
   align-items: center;
   justify-content: center;
   z-index: 1000;
+  backdrop-filter: blur(4px);
+  animation: fadeIn 0.2s ease-out;
 }
 
 .role-modal-content {
@@ -333,13 +374,15 @@
   border-radius: 8px;
   width: 100%;
   max-width: 500px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  animation: slideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .role-modal-content h2 {
   color: #b91c1c;
   margin-top: 0;
   margin-bottom: 1rem;
+  font-size: 1.5rem;
 }
 
 .warning-text {
@@ -347,8 +390,9 @@
   line-height: 1.6;
   background: #fef2f2;
   border: 1px solid #fecaca;
+  color: #7f1d1d;
   padding: 1rem;
-  border-radius: 4px;
+  border-radius: 6px;
   margin-bottom: 1.5rem;
 }
 
@@ -360,6 +404,7 @@
   font-weight: 600;
   display: block;
   margin-bottom: 0.5rem;
+  color: #374151;
 }
 
 .role-selection {
@@ -367,7 +412,8 @@
   gap: 1.5rem;
   background: #f9fafb;
   padding: 1rem;
-  border-radius: 4px;
+  border-radius: 6px;
+  border: 1px solid #e5e7eb;
 }
 
 .role-selection label {
@@ -376,13 +422,30 @@
   gap: 0.5rem;
   font-weight: 500;
   margin: 0;
+  cursor: pointer;
+}
+
+.role-selection input[type="radio"] {
+  width: 1.2em;
+  height: 1.2em;
+  accent-color: #dc2626;
 }
 
 .modal-actions {
   display: flex;
   justify-content: flex-end;
   gap: 1rem;
-  margin-top: 1.5rem;
+  margin-top: 2rem;
   border-top: 1px solid #e5e7eb;
   padding-top: 1.5rem;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideIn {
+  from { transform: translateY(20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
 }
