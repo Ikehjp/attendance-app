@@ -113,7 +113,11 @@ const AdminDashboardView: React.FC = () => {
           </div>
         </div>
 
-        <div className="stat-card stat-card--success">
+        <div
+          className="stat-card stat-card--success stat-card--clickable"
+          onClick={() => navigate('/admin/users')}
+          title="ユーザー管理画面へ"
+        >
           <div className="stat-icon">🎓</div>
           <div className="stat-content">
             <h3 className="stat-value">{stats?.totalStudents || 0}</h3>
@@ -248,7 +252,7 @@ const AdminDashboardView: React.FC = () => {
             <span className="action-icon">📆</span>
             <span className="action-text">イベント管理</span>
           </button>
-          <button className="action-btn" onClick={() => alert('IP範囲設定機能は開発中です')}>
+          <button className="action-btn" onClick={() => navigate('/admin/ip-settings')}>
             <span className="action-icon">🔒</span>
             <span className="action-text">IP範囲設定</span>
           </button>

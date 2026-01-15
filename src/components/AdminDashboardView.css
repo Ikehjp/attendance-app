@@ -55,6 +55,28 @@
     box-shadow: var(--shadow-glass-lg);
 }
 
+/* クリック可能なカード */
+.stat-card--clickable {
+    cursor: pointer;
+    position: relative;
+}
+
+.stat-card--clickable::after {
+    content: '→';
+    position: absolute;
+    right: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 1.25rem;
+    color: var(--secondary-400);
+    transition: var(--transition-base);
+}
+
+.stat-card--clickable:hover::after {
+    color: var(--primary-600);
+    transform: translateY(-50%) translateX(4px);
+}
+
 .stat-icon {
     font-size: 2.25rem;
     width: 4rem;
