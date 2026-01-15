@@ -10,48 +10,49 @@ class GroupService {
    */
   static async createGroup(data, creatorId) {
     try {
-      if (!creatorId) {
-        throw new Error('作成者ID (creatorId) が必要です');
+      // 1. 作成者の所属組織を取得 (ここを追加)
+      const users = await query('SELECT organization_id FROM users WHERE id = ?', [creatorId]);
+      if (users.length === 0) {
+        throw new Error('ユーザーが見つかりません');
+      }
+      const organizationId = users[0].organization_id;
+
+      if (!organizationId) {
+        throw new Error('ユーザーが組織に所属していません');
       }
 
-      const result = await transaction(async (conn) => {
-        const existingGroups = await query(
-          'SELECT id FROM `groups` WHERE name = ?',
-          [data.name],
-          conn
-        );
+      // 2. グループを作成 (SQLに organization_id を追加)
+      const sql = `
+        INSERT INTO \`groups\` 
+        (organization_id, name, icon, description, created_by, is_active) 
+        VALUES (?, ?, ?, ?, ?, ?)
+      `;
+      
+      const params = [
+        organizationId,      // 追加
+        data.name,
+        data.icon || null,
+        data.description || null,
+        creatorId,
+        true
+      ];
 
-        if (existingGroups.length > 0) {
-          throw new Error('このグループ名は既に使用されています');
-        }
+      const result = await query(sql, params);
 
-        const insertResult = await query(
-          'INSERT INTO `groups` (name, icon, description, created_by, is_active) VALUES (?, ?, ?, ?, ?)',
-          [
-            data.name,
-            data.icon || null,
-            data.description || null,
-            creatorId, // [修正] 作成者IDをセット
-            data.is_active !== undefined ? data.is_active : true
-          ],
-          conn
-        );
+      logger.info('グループ作成成功', { groupId: result.insertId, creatorId });
 
-        return {
-          success: true,
-          message: 'グループが作成されました',
-          data: { id: insertResult.insertId }
-        };
-      });
-
-      logger.info('グループ作成成功', { groupId: result.data.id, name: data.name, creatorId });
-      return result;
-    } catch (error) {
-      logger.error('グループ作成エラー:', error.message);
       return {
-        success: false,
-        message: error.message || 'グループの作成に失敗しました'
+        success: true,
+        message: 'グループを作成しました',
+        data: {
+          id: result.insertId,
+          organization_id: organizationId,
+          name: data.name
+        }
       };
+    } catch (error) {
+      logger.error(`グループ作成エラー: ${error.message}`, { stack: error.stack });
+      throw error;
     }
   }
 

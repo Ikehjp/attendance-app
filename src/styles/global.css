@@ -100,6 +100,8 @@ html {
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  /* システムのダークテーマを無視 */
+  color-scheme: light only;
 }
 
 body {
@@ -111,6 +113,8 @@ body {
   background-attachment: fixed;
   color: var(--text-primary);
   min-height: 100vh;
+  /* システムのダークテーマを無視 */
+  color-scheme: light only;
 }
 
 code {
@@ -166,10 +170,12 @@ button {
   font-family: inherit;
   font-size: inherit;
   line-height: inherit;
-  color: inherit;
+  color: var(--text-primary);
   background: none;
   border: none;
   cursor: pointer;
+  /* システムのダークテーマを無視 */
+  color-scheme: light;
 }
 
 /* 入力フィールドのリセット */
@@ -179,7 +185,10 @@ select {
   font-family: inherit;
   font-size: inherit;
   line-height: inherit;
-  color: inherit;
+  color: var(--text-primary);
+  background-color: #ffffff;
+  /* システムのダークテーマを無視 */
+  color-scheme: light;
 }
 
 /* リストのリセット */
@@ -505,18 +514,22 @@ th {
   }
 }
 
-/* ダークモード対応（将来の拡張用） */
-@media (prefers-color-scheme: dark) {
-  .dark-mode {
-    background-color: #1f2937;
-    color: #f9fafb;
-  }
-
-  .dark-mode .card {
-    background-color: #374151;
-    border-color: #4b5563;
-  }
+/* ダークモード対応（将来の拡張用）
+   注: システムのダークテーマには反応しないように無効化
+   アプリ内でダークモードを実装する場合は、クラスベースで制御
+*/
+/* @media (prefers-color-scheme: dark) は使用しない */
+/*
+.dark-mode {
+  background-color: #1f2937;
+  color: #f9fafb;
 }
+
+.dark-mode .card {
+  background-color: #374151;
+  border-color: #4b5563;
+}
+*/
 
 /* アニメーション */
 .fade-in {

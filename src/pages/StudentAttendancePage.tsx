@@ -53,10 +53,13 @@ const StudentAttendancePage: React.FC = () => {
   const loadStudents = async () => {
     try {
       const response = await attendanceApi.getStudents();
-      if (response.success) {
+      if (response.success && response.data?.students) {
         setStudents(response.data.students as unknown as Student[]);
+      } else {
+        setStudents([]);
       }
     } catch (err) {
+      setStudents([]);
       if (process.env.NODE_ENV === 'development') {
         console.error('学生データ読み込みエラー:', err);
       }
@@ -70,12 +73,14 @@ const StudentAttendancePage: React.FC = () => {
 
       const response = await attendanceApi.getStudentAttendance(studentId ? { studentId } : {});
 
-      if (response.success) {
+      if (response.success && response.data?.records) {
         setAttendanceRecords(response.data.records as unknown as AttendanceRecord[]);
       } else {
+        setAttendanceRecords([]);
         setError('出欠記録の読み込みに失敗しました');
       }
     } catch (err) {
+      setAttendanceRecords([]);
       setError('出欠記録の読み込みに失敗しました');
       if (process.env.NODE_ENV === 'development') {
         console.error('出欠記録読み込みエラー:', err);
@@ -269,7 +274,7 @@ const StudentAttendancePage: React.FC = () => {
             >
               全学生
             </button>
-            {students.map((student) => (
+            {(students || []).map((student) => (
               <button
                 key={student.student_id}
                 className={`btn ${selectedStudent === student.student_id ? 'btn--primary' : 'btn--secondary'}`}
@@ -298,7 +303,7 @@ const StudentAttendancePage: React.FC = () => {
                     className="form-select"
                   >
                     <option value="">学生を選択してください</option>
-                    {students.map((student) => (
+                    {(students || []).map((student) => (
                       <option key={student.student_id} value={student.student_id}>
                         {student.name} ({student.student_id})
                       </option>
@@ -366,7 +371,7 @@ const StudentAttendancePage: React.FC = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {attendanceRecords.map((record) => (
+                  {(attendanceRecords || []).map((record) => (
                     <tr key={record.id}>
                       <td>{record.student_name}</td>
                       <td>{record.student_id}</td>
