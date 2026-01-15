@@ -6,6 +6,8 @@
   justify-content: center;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   padding: 1rem;
+  /* システムのダークテーマを無視 */
+  color-scheme: light only;
 }
 
 .login-container {
@@ -113,11 +115,11 @@
   .login-page {
     padding: 0.5rem;
   }
-  
+
   .login-card {
     padding: 1.5rem;
   }
-  
+
   .login-title {
     font-size: 1.5rem;
   }

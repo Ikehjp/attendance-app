@@ -92,68 +92,121 @@ class AuthService {
     try {
       const { name, email, password, role, organizationName, joinCode } = userData;
 
+      logger.info('=== 新規登録開始 ===', {
+        name,
+        email,
+        role,
+        organizationName: organizationName || '(なし)',
+        joinCode: joinCode ? `${joinCode.substring(0, 10)}...` : '(なし)',
+        hasPassword: !!password
+      });
+
       // 1. メールアドレスの重複チェック
+      logger.info('ステップ1: メールアドレス重複チェック', { email });
       const existingUsers = await query(
         'SELECT id FROM users WHERE email = ?',
         [email]
       );
 
       if (existingUsers.length > 0) {
+        logger.warn('メールアドレス重複エラー', {
+          email,
+          existingUserId: existingUsers[0].id
+        });
         return {
           success: false,
           message: 'このメールアドレスは既に使用されています'
         };
       }
+      logger.info('メールアドレスOK（重複なし）');
 
+      // パスワードハッシュ化
+      logger.info('ステップ2: パスワードハッシュ化');
       const hashedPassword = await bcrypt.hash(password, 10);
+      logger.info('パスワードハッシュ化完了', {
+        originalLength: password.length,
+        hashedLength: hashedPassword.length
+      });
+
+      // トランザクション開始
+      logger.info('ステップ3: トランザクション開始');
       connection = await transaction.begin();
+      logger.info('トランザクション接続取得完了');
 
       let organizationId;
       let studentId = userData.studentId || null;
 
       // 2. ロールごとの処理
+      logger.info('ステップ4: ロール別処理', { role });
+
       if (role === 'owner') {
         // --- オーナー登録（新規組織作成） ---
+        logger.info('オーナー登録フロー開始', { organizationName });
+
         if (!organizationName) {
+          logger.error('組織名が未指定');
           await transaction.rollback(connection);
           return { success: false, message: '組織名は必須です' };
         }
 
         // 組織作成
+        logger.info('組織を作成中...', { organizationName });
         const [orgResult] = await connection.query(
           'INSERT INTO organizations (name, type, is_active, created_at) VALUES (?, ?, 1, NOW())',
           [organizationName, 'school'] // typeはデフォルトでschool
         );
         organizationId = orgResult.insertId;
+        logger.info('組織作成完了', {
+          organizationId,
+          organizationName,
+          insertId: orgResult.insertId,
+          affectedRows: orgResult.affectedRows
+        });
 
         // 生徒用参加コードの生成（簡易的）
         const newJoinCode = `SCHOOL-${organizationId}-${Math.floor(1000 + Math.random() * 9000)}`;
+        logger.info('参加コード生成', { joinCode: newJoinCode });
+
         await connection.query(
           'UPDATE organizations SET student_join_code = ? WHERE id = ?',
           [newJoinCode, organizationId]
         );
+        logger.info('参加コード設定完了');
 
       } else if (role === 'student') {
         // --- 生徒登録（既存組織に参加） ---
+        logger.info('生徒登録フロー開始', { joinCode });
+
         if (!joinCode) {
+          logger.error('参加コードが未指定');
           await transaction.rollback(connection);
           return { success: false, message: '参加コードは必須です' };
         }
 
         // 参加コードから組織を特定
+        logger.info('参加コードで組織検索中...', { joinCode });
         const [orgs] = await connection.query(
           'SELECT id FROM organizations WHERE student_join_code = ? AND is_active = 1',
           [joinCode]
         );
 
         if (orgs.length === 0) {
+          logger.warn('無効な参加コード', {
+            joinCode,
+            searchResult: '組織が見つかりません'
+          });
           await transaction.rollback(connection);
           return { success: false, message: '無効な参加コードです' };
         }
         organizationId = orgs[0].id;
+        logger.info('組織特定完了', {
+          organizationId,
+          joinCode
+        });
 
       } else {
         // --- 教師などは招待のみ ---
+        logger.warn('招待のみ許可のロールで登録試行', { role });
         await transaction.rollback(connection);
         return {
           success: false,
@@ -162,23 +215,43 @@ class AuthService {
       }
 
       // 3. ユーザー作成
+      logger.info('ステップ5: ユーザーレコード作成', {
+        name,
+        email,
+        role,
+        organizationId,
+        studentId
+      });
+
       const [userResult] = await connection.query(
         'INSERT INTO users (name, email, password, role, organization_id, student_id, created_at) VALUES (?, ?, ?, ?, ?, ?, NOW())',
         [name, email, hashedPassword, role, organizationId, studentId]
       );
       const userId = userResult.insertId;
 
+      logger.info('ユーザーレコード作成完了', {
+        userId,
+        insertId: userResult.insertId,
+        affectedRows: userResult.affectedRows
+      });
+
       // オーナーの場合、組織のowner_idを更新
       if (role === 'owner') {
+        logger.info('組織のowner_id更新中...', { userId, organizationId });
         await connection.query(
           'UPDATE organizations SET owner_id = ? WHERE id = ?',
           [userId, organizationId]
         );
+        logger.info('組織のowner_id更新完了');
       }
 
+      // トランザクションコミット
+      logger.info('ステップ6: トランザクションコミット');
       await transaction.commit(connection);
+      logger.info('トランザクションコミット完了');
 
       // 4. トークン生成
+      logger.info('ステップ7: JWTトークン生成');
       const tokenPayload = {
         id: userId,
         email: email,
@@ -189,7 +262,16 @@ class AuthService {
       }
 
       const token = JWTUtil.generateToken(tokenPayload);
-      logger.info('新規登録成功', { userId, role, organizationId });
+      logger.info('新規登録成功', {
+        userId,
+        email,
+        role,
+        organizationId,
+        studentId,
+        tokenLength: token.length
+      });
+
+      logger.info('=== 新規登録完了 ===');
 
       return {
         success: true,
@@ -208,8 +290,29 @@ class AuthService {
       };
 
     } catch (error) {
-      if (connection) await transaction.rollback(connection);
-      logger.error('新規登録エラー:', error.message);
+      if (connection) {
+        logger.error('トランザクションロールバック実行');
+        await transaction.rollback(connection);
+      }
+
+      logger.error('=== 新規登録エラー ===', {
+        errorMessage: error.message,
+        errorCode: error.code,
+        errorErrno: error.errno,
+        sqlState: error.sqlState,
+        sqlMessage: error.sqlMessage,
+        sql: error.sql,
+        errorStack: error.stack,
+        userData: {
+          name: userData.name,
+          email: userData.email,
+          role: userData.role,
+          hasPassword: !!userData.password,
+          organizationName: userData.organizationName,
+          joinCode: userData.joinCode ? `${userData.joinCode.substring(0, 10)}...` : undefined
+        }
+      });
+
       return {
         success: false,
         message: 'サーバーエラーが発生しました'

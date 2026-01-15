@@ -61,6 +61,8 @@ try {
   const attendanceStatsRoutes = loadRoute('Attendance Stats', './routes/attendance-stats');
   const invitationRoutes = loadRoute('Invitation', './routes/invitations');
   const attendanceV2Routes = loadRoute('Attendance V2', './routes/attendance-v2');
+  const adminRoutes = loadRoute('Admin', './routes/admin');
+  const ipSettingsRoutes = loadRoute('IP Settings', './routes/ip-settings');
 
   log('\n✅ 全ルートの読み込み完了\n');
 
@@ -128,6 +130,9 @@ try {
   app.use('/api/invitations', invitationRoutes);
   // V2 API (新スキーマ対応)
   app.use('/api/v2/attendance', attendanceV2Routes);
+  // 管理者用API
+  app.use('/api/admin', adminRoutes);
+  app.use('/api/ip-settings', ipSettingsRoutes);
 
 
   // --- 404ハンドラ ---

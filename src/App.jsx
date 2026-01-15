@@ -37,6 +37,8 @@ const AbsenceRequestPage = React.lazy(() => import('./pages/AbsenceRequestPage')
 const ApprovalManagementPage = React.lazy(() => import('./pages/ApprovalManagementPage'));
 const TimetablePage = React.lazy(() => import('./pages/TimetablePage'));
 const NotificationsPage = React.lazy(() => import('./pages/NotificationsPage'));
+const AdminUsersPage = React.lazy(() => import('./pages/AdminUsersPage'));
+const IPSettingsPage = React.lazy(() => import('./pages/IPSettingsPage'));
 
 // グローバルなローディングスピナー
 const GlobalLoader = () => (
@@ -298,6 +300,22 @@ const AppContent = React.memo(() => {
             element={
               <ProtectedRoute>
                 <NotificationsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/users"
+            element={
+              <ProtectedRoute>
+                <AdminUsersPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/ip-settings"
+            element={
+              <ProtectedRoute>
+                <IPSettingsPage />
               </ProtectedRoute>
             }
           />

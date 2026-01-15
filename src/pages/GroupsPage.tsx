@@ -241,9 +241,9 @@ const GroupsPage: React.FC = () => {
               {groups.map((group) => (
                 <div key={group.id} className="group-card">
                   <div className="group-card-header">
-                    <div>
-                      {group.icon && <span className="group-icon" style={{ fontSize: '1.5rem', marginRight: '8px' }}>{group.icon}</span>}
-                      <h2 className="group-name">{group.name}</h2>
+                    <div className="group-header-content">
+                      {group.icon && <span className="group-icon">{group.icon}</span>}
+                      <h3>{group.name}</h3>
                       {group.grade && (
                         <span className="group-badge">{group.grade}</span>
                       )}
@@ -269,20 +269,18 @@ const GroupsPage: React.FC = () => {
                     </div>
                   </div>
 
-                  <div className="group-card-body">
-                    {group.description && (
-                      <p className="group-description">{group.description}</p>
-                    )}
+                  <div className="group-card-content">
+                    <p className="group-description">
+                      {group.description || ''}
+                    </p>
 
                     <div className="group-stats">
                       <div className="stat-item">
-                        <span className="stat-icon">👥</span>
-                        <span className="stat-label">メンバー</span>
-                        <span className="stat-value">{group.member_count || 0}名</span>
+                        <span className="stat-label">MEMBERS</span>
+                        <span className="stat-value">{group.member_count || 0}</span>
                       </div>
                       <div className="stat-item">
-                        <span className="stat-icon">📅</span>
-                        <span className="stat-label">年度</span>
+                        <span className="stat-label">YEAR</span>
                         <span className="stat-value">{group.academic_year || 'N/A'}</span>
                       </div>
                     </div>
