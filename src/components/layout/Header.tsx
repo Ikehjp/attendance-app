@@ -67,7 +67,10 @@ const HamburgerIcon: React.FC<HamburgerIconProps> = ({ isOpen, onClick }) => (
 );
 
 const Header: React.FC = () => {
-  const { user, isAuthenticated, logout, isLoading } = useAuthStore();
+  const authStore = useAuthStore() as any;
+  const { user, isAuthenticated, logout, isLoading } = authStore;
+  const storeToken = authStore.token || authStore.accessToken;
+
   const navigate = useNavigate();
   const [isScrolled, setIsScrolled] = useState<boolean>(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState<boolean>(false);
@@ -75,15 +78,32 @@ const Header: React.FC = () => {
 
   const currentRole = user?.role;
 
+  // ▼▼▼ 修正: デバッグログを削除 ▼▼▼
+  const handleChatClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+
+    const activeToken = storeToken || localStorage.getItem('authToken') || localStorage.getItem('token');
+    
+    // console.log(...) は削除しました
+
+    if (activeToken) {
+      window.open(`http://localhost:3003?token=${activeToken}`, '_self');
+    } else {
+      alert('チャットへのログインに必要な情報が見つかりません。一度ログアウトして再ログインしてください。');
+    }
+    
+    if (isMobileMenuOpen) {
+      closeMobileMenu();
+    }
+  };
+  // ▲▲▲ 修正ここまで ▲▲▲
+
   // 未読通知数を取得
   const fetchUnreadCount = useCallback(async() => {
     if (!isAuthenticated) return;
     try {
       const response = await notificationApi.getNotifications({ limit: 50 });
       if (response.success) {
-        // ApiResponse<T> where T has notifications array
-        // Assuming ApiResponse structure returns `data` which has `notifications`
-        // We cast response.data to any for now if strict type is missing in notificationApi usage context here or rely on inference
         const data = response.data as any;
         const notifications = data?.notifications || [];
         const count = notifications.filter((n: any) => !n.is_read).length;
@@ -196,7 +216,22 @@ const Header: React.FC = () => {
             {isAuthenticated && (
               <div className="nav-links-left desktop-only">
                 <NavLink to="/dashboard" className={getLinkClass}>ダッシュボード</NavLink>
-                <NavLink to="/chat" className={getLinkClass}>チャット</NavLink>
+                
+                <button
+                  type="button"
+                  onClick={handleChatClick}
+                  className="nav-link"
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    cursor: 'pointer',
+                    font: 'inherit',
+                    padding: 0,
+                  }}
+                >
+                  チャット
+                </button>
+
                 {currentRole === 'student' && (
                   <>
                     <NavLink to="/student-dashboard" className={getLinkClass}>📱 QRスキャン</NavLink>
@@ -317,9 +352,24 @@ const Header: React.FC = () => {
                     <NavLink to="/calendar" className={getMobileLinkClass} onClick={closeMobileMenu}>
                       カレンダー
                     </NavLink>
-                    <NavLink to="/chat" className={getMobileLinkClass} onClick={closeMobileMenu}>
+                    
+                    <button
+                      type="button"
+                      onClick={handleChatClick}
+                      className="mobile-nav-link"
+                      style={{
+                        background: 'none',
+                        border: 'none',
+                        cursor: 'pointer',
+                        font: 'inherit',
+                        textAlign: 'left',
+                        width: '100%',
+                        padding: '1rem',
+                      }}
+                    >
                       チャット
-                    </NavLink>
+                    </button>
+
                   </div>
 
                   {/* 管理メニュー（権限がある場合） */}

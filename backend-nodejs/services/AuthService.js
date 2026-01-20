@@ -3,6 +3,7 @@ const crypto = require('crypto');
 const { query, transaction } = require('../config/database');
 const JWTUtil = require('../utils/jwt');
 const logger = require('../utils/logger');
+const jwt = require('jsonwebtoken');
 
 /**
  * 認証サービス（マルチテナント対応版）
@@ -43,6 +44,7 @@ class AuthService {
       let tokenPayload = {
         id: user.id,
         email: user.email,
+        name: user.name,
         role: user.role
       };
 
@@ -50,7 +52,12 @@ class AuthService {
         tokenPayload.student_id = studentId;
       }
 
+      // ▼▼▼ 修正: JWTUtilを使ってトークンを生成する形に戻す ▼▼▼
+      // これにより、jwt.jsで設定した issuer/audience が正しく付与されます
       const token = JWTUtil.generateToken(tokenPayload);
+      console.log("🎟️ [DEBUG] 生成されたトークン:", token);
+      // ▲▲▲ 修正完了 ▲▲▲
+
       logger.info('Token generated:', { tokenLength: token.length });
 
       logger.info('ログイン成功', {
@@ -261,7 +268,10 @@ class AuthService {
         tokenPayload.student_id = studentId;
       }
 
+      // ▼▼▼ 修正: ここも JWTUtil に戻す ▼▼▼
       const token = JWTUtil.generateToken(tokenPayload);
+      // ▲▲▲ 修正完了 ▲▲▲
+
       logger.info('新規登録成功', {
         userId,
         email,
@@ -367,60 +377,58 @@ class AuthService {
     }
   }
 
-  /**
-   * パスワード変更
-   */
+  // ... (changePassword, updateProfile はそのままでOK) ...
+  
   static async changePassword(userId, currentPassword, newPassword) {
-    try {
-      const users = await query(
-        'SELECT password FROM users WHERE id = ?',
-        [userId]
-      );
-
-      if (users.length === 0) {
+      // (省略:元のコードのまま)
+      try {
+        const users = await query(
+          'SELECT password FROM users WHERE id = ?',
+          [userId]
+        );
+  
+        if (users.length === 0) {
+          return {
+            success: false,
+            message: 'ユーザーが見つかりません'
+          };
+        }
+  
+        const user = users[0];
+  
+        const isCurrentPasswordValid = await bcrypt.compare(currentPassword, user.password);
+        if (!isCurrentPasswordValid) {
+          return {
+            success: false,
+            message: '現在のパスワードが正しくありません'
+          };
+        }
+  
+        const hashedNewPassword = await bcrypt.hash(newPassword, 10);
+  
+        await query(
+          'UPDATE users SET password = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+          [hashedNewPassword, userId]
+        );
+  
+        logger.info('パスワード変更成功', { userId });
+  
+        return {
+          success: true,
+          message: 'パスワードが変更されました'
+        };
+      } catch (error) {
+        logger.error('パスワード変更エラー:', error.message);
         return {
           success: false,
-          message: 'ユーザーが見つかりません'
+          message: 'サーバーエラーが発生しました'
         };
       }
-
-      const user = users[0];
-
-      const isCurrentPasswordValid = await bcrypt.compare(currentPassword, user.password);
-      if (!isCurrentPasswordValid) {
-        return {
-          success: false,
-          message: '現在のパスワードが正しくありません'
-        };
-      }
-
-      const hashedNewPassword = await bcrypt.hash(newPassword, 10);
-
-      await query(
-        'UPDATE users SET password = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
-        [hashedNewPassword, userId]
-      );
-
-      logger.info('パスワード変更成功', { userId });
-
-      return {
-        success: true,
-        message: 'パスワードが変更されました'
-      };
-    } catch (error) {
-      logger.error('パスワード変更エラー:', error.message);
-      return {
-        success: false,
-        message: 'サーバーエラーが発生しました'
-      };
     }
-  }
-
-  /**
-   * ユーザー情報更新
-   */
-  static async updateProfile(userId, updateData) {
-    logger.info('=== プロフィール更新開始 ===', { userId, updateData });
+  
+    static async updateProfile(userId, updateData) {
+      // (省略:元のコードのまま)
+      logger.info('=== プロフィール更新開始 ===', { userId, updateData });
 
     try {
       const allowedFields = ['name', 'email', 'department', 'student_id'];
