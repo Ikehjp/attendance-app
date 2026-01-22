@@ -45,7 +45,7 @@ const authenticate = async (req, res, next) => {
 
     // DBから最新のユーザー情報を取得（organization_idを含む）
     const users = await query(
-      'SELECT id, name, email, role, student_id, organization_id FROM users WHERE id = ?',
+      'SELECT id, name, email, role, student_id, organization_id, felica_idm FROM users WHERE id = ?',
       [decoded.id]
     );
 

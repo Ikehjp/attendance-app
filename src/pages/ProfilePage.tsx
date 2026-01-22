@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import useAuthStore from '../stores/authStore';
 import { attendanceApi } from '../api/attendanceApi';
 import Input from '../components/common/Input';
@@ -14,6 +14,7 @@ interface ProfileData {
   role: 'admin' | 'employee' | 'student';
   id: number | string;
   created_at?: string;
+  felica_idm?: string | null;
   [key: string]: any;
 }
 
@@ -31,7 +32,7 @@ const ProfilePage: React.FC = () => {
   const [isEditing, setIsEditing] = useState<boolean>(false);
   const [editData, setEditData] = useState<Record<string, any>>({});
 
-  // [新規] ロール変更モーダルのための state
+  // ロール変更モーダルのための state
   const [showRoleModal, setShowRoleModal] = useState<boolean>(false);
   const [roleStatus, setRoleStatus] = useState<RoleStatus>({
     canUpdate: false,
@@ -44,6 +45,15 @@ const ProfilePage: React.FC = () => {
   });
   const [roleError, setRoleError] = useState<string | null>(null);
   const [isRoleLoading, setIsRoleLoading] = useState<boolean>(false);
+
+  // ICカード登録のための state
+  const [showIcModal, setShowIcModal] = useState<boolean>(false);
+  const [icStatus, setIcStatus] = useState<'idle' | 'waiting' | 'scanned' | 'complete'>('idle');
+  const [scannedIdm, setScannedIdm] = useState<string | null>(null);
+  const [icError, setIcError] = useState<string | null>(null);
+  
+  // ポーリング用のRef
+  const pollIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   const loadProfile = useCallback(async () => {
     try {
@@ -61,7 +71,7 @@ const ProfilePage: React.FC = () => {
           student_id: (response.data as any).user.student_id || '',
         });
 
-        // [新規] ロール変更ステータスも読み込む
+        // ロール変更ステータスも読み込む
         const statusRes = await attendanceApi.getRoleUpdateStatus();
         if (statusRes.success) {
           setRoleStatus(statusRes.data as any);
@@ -87,6 +97,11 @@ const ProfilePage: React.FC = () => {
       loadProfile();
     }
   }, [isAuthenticated, user, loadProfile]);
+
+  // モーダルを閉じる時のクリーンアップ
+  useEffect(() => {
+    return () => stopPolling();
+  }, []);
 
   const handleEditChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setEditData({ ...editData, [e.target.name]: e.target.value });
@@ -115,7 +130,7 @@ const ProfilePage: React.FC = () => {
     }
   };
 
-  // --- [新規] ロール変更ハンドラー ---
+  // --- ロール変更ハンドラー ---
   const openRoleModal = () => {
     setRoleError(null);
     setRoleFormData(prev => ({ ...prev, password: '' }));
@@ -159,6 +174,78 @@ const ProfilePage: React.FC = () => {
     } finally {
       setIsRoleLoading(false);
     }
+  };
+
+  // --- ICカード登録ハンドラー ---
+  const handleStartIcRegistration = async () => {
+    try {
+      setIcError(null);
+      // attendanceApiにメソッドが追加されている前提です
+      await (attendanceApi as any).startIcRegistration();
+      setIcStatus('waiting');
+      setShowIcModal(true);
+      
+      // 2秒ごとにステータスを確認
+      pollIntervalRef.current = setInterval(checkIcStatus, 2000);
+    } catch (err: any) {
+      // エラーハンドリング
+      const msg = err.response?.data?.message || err.message || '登録モードの開始に失敗しました';
+      alert(msg);
+    }
+  };
+
+  const checkIcStatus = async () => {
+    try {
+      const res = await (attendanceApi as any).getIcRegistrationStatus();
+      // status: 'idle' | 'waiting' | 'scanned'
+      
+      if (res.status === 'idle') {
+        // タイムアウトなどで終了していた場合
+        stopPolling();
+        setIcStatus('idle');
+        setIcError('タイムアウトしました。もう一度やり直してください。');
+      } else if (res.status === 'scanned' && res.scannedIdm) {
+        // カードがスキャンされた！
+        stopPolling();
+        setScannedIdm(res.scannedIdm);
+        setIcStatus('scanned');
+      }
+      // waitingの場合は何もしない（継続）
+    } catch (err) {
+      stopPolling();
+    }
+  };
+
+  const stopPolling = () => {
+    if (pollIntervalRef.current) {
+      clearInterval(pollIntervalRef.current);
+      pollIntervalRef.current = null;
+    }
+  };
+
+  const handleConfirmIc = async () => {
+    try {
+      await (attendanceApi as any).confirmIcRegistration();
+      setIcStatus('complete');
+      // 少し待ってから閉じる
+      setTimeout(() => {
+        setShowIcModal(false);
+        setIcStatus('idle');
+        setScannedIdm(null);
+        alert('ICカードを紐付けました！');
+        // 情報更新のためリロード
+        loadProfile();
+      }, 1500);
+    } catch (err: any) {
+      setIcError('登録に失敗しました');
+    }
+  };
+
+  const closeIcModal = () => {
+    stopPolling();
+    setShowIcModal(false);
+    setIcStatus('idle');
+    setScannedIdm(null);
   };
 
   if (isLoading && !profile) {
@@ -295,7 +382,7 @@ const ProfilePage: React.FC = () => {
             </div>
           </div>
 
-          {/* [新規] ロール変更セクション */}
+          {/* ロール変更セクション */}
           <div className="profile-card profile-role-change">
             <div className="profile-details">
               <div className="profile-field">
@@ -323,10 +410,54 @@ const ProfilePage: React.FC = () => {
               </div>
             </div>
           </div>
+
+          {/* ICカード連携セクション */}
+          <div className="profile-card profile-role-change" style={{ marginTop: '20px', borderColor: '#bfdbfe', background: '#eff6ff' }}>
+              <div className="profile-details">
+                <div className="profile-field">
+                  <span className="field-label" style={{ color: '#1e40af' }}>ICカード連携</span>
+                  
+                  {profile.felica_idm ? (
+                    /* 登録済みの場合 */
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        <span style={{ fontSize: '1.5rem' }}>✅</span>
+                        <div>
+                          <p style={{ margin: 0, fontWeight: 'bold', color: '#1e40af' }}>登録済み</p>
+                          <p style={{ margin: 0, fontSize: '0.9rem', color: '#666' }}>ID: {profile.felica_idm}</p>
+                        </div>
+                      </div>
+                      <Button 
+                        variant="secondary" 
+                        onClick={handleStartIcRegistration}
+                        style={{ width: 'fit-content', fontSize: '0.9rem' }}
+                      >
+                        別のカードに変更する
+                      </Button>
+                    </div>
+                  ) : (
+                    /* 未登録の場合 */
+                    <>
+                      <p style={{ color: '#3b82f6' }}>
+                        SuicaなどのICカードを登録すると、タッチするだけで出席登録ができるようになります。
+                      </p>
+                      <Button 
+                        variant="primary" 
+                        onClick={handleStartIcRegistration}
+                        style={{ backgroundColor: '#2563eb' }}
+                      >
+                        ICカードを登録する
+                      </Button>
+                    </>
+                  )}
+                  
+                </div>
+              </div>
+          </div>
         </div>
       </div>
 
-      {/* [新規] ロール変更モーダル */}
+      {/* ロール変更モーダル */}
       {showRoleModal && (
         <div className="role-modal-overlay">
           <div className="role-modal-content">
@@ -387,6 +518,55 @@ const ProfilePage: React.FC = () => {
                 </Button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* IC登録モーダル */}
+      {showIcModal && (
+        <div className="role-modal-overlay">
+          <div className="role-modal-content" style={{ textAlign: 'center' }}>
+            <h2 style={{ color: '#333' }}>ICカード登録</h2>
+            
+            {icStatus === 'waiting' && (
+              <div style={{ padding: '20px' }}>
+                <div className="loading-spinner" style={{ margin: '0 auto 20px' }} />
+                <p>カードリーダーに<br/>ICカードをかざしてください...</p>
+                <p style={{ fontSize: '0.8rem', color: '#666' }}>残り時間: 30秒</p>
+              </div>
+            )}
+
+            {icStatus === 'scanned' && (
+              <div style={{ padding: '20px' }}>
+                <p style={{ fontSize: '3rem' }}>💳</p>
+                <p>カードを検出しました！</p>
+                <p style={{ background: '#eee', padding: '10px', fontFamily: 'monospace' }}>
+                  ID: {scannedIdm}
+                </p>
+                <div className="modal-actions" style={{ justifyContent: 'center' }}>
+                  <Button variant="primary" onClick={handleConfirmIc}>
+                    このカードを登録する
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {icStatus === 'complete' && (
+              <div style={{ padding: '20px' }}>
+                <p style={{ fontSize: '3rem' }}>✅</p>
+                <p>登録が完了しました！</p>
+              </div>
+            )}
+
+            {icError && (
+              <p className="error-message">{icError}</p>
+            )}
+
+            {icStatus !== 'complete' && (
+              <Button variant="secondary" onClick={closeIcModal} style={{ marginTop: '20px' }}>
+                キャンセル
+              </Button>
+            )}
           </div>
         </div>
       )}

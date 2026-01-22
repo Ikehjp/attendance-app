@@ -9,6 +9,8 @@ const logger = require('./utils/logger');
 const errorHandler = require('./middleware/errorHandler');
 const fs = require('fs');
 const path = require('path');
+const cron = require('node-cron');
+const { query } = require('./config/database');
 
 const LOG_FILE = path.join(__dirname, 'server-start.log');
 fs.writeFileSync(LOG_FILE, `起動開始: ${new Date().toISOString()}\n`);
@@ -22,6 +24,25 @@ function errorLog(msg, err) {
   console.error(msg, err);
   fs.appendFileSync(LOG_FILE, `ERROR: ${msg}\n${err.message}\n${err.stack}\n`);
 }
+
+// ▼▼▼ 自動退勤バッチ（毎日 23:59 に実行） ▼▼▼
+cron.schedule('59 23 * * *', async () => {
+  console.log('🕒 [自動退勤] バッチ処理を開始します...');
+  try {
+    // 条件: 「今日の日付」で、「退勤時刻が入っていない（またはstatusが出席のまま）」のレコードを更新
+    // ここでは status が 'present' のものを 'auto_left' (自動退勤) に変更する例です
+    
+    const result = await query(
+      `UPDATE user_attendance_records 
+       SET status = 'auto_left', updated_at = NOW() 
+       WHERE date = CURDATE() AND status = 'present'`
+    );
+    
+    console.log(`✅ [自動退勤] ${result.affectedRows} 件のデータを自動退勤扱いにしました`);
+  } catch (error) {
+    console.error('❌ [自動退勤] エラーが発生しました', error);
+  }
+});
 
 log('========================================');
 log('サーバー起動開始...');
@@ -51,6 +72,7 @@ function loadRoute(routeName, routePath) {
 }
 
 try {
+  // ▼▼▼ ここでルートを読み込みます ▼▼▼
   const authRoutes = loadRoute('Auth', './routes/auth');
   const userRoutes = loadRoute('User', './routes/users');
   const attendanceRoutes = loadRoute('Attendance', './routes/attendance');
@@ -75,6 +97,9 @@ try {
   const attendanceV2Routes = loadRoute('Attendance V2', './routes/attendance-v2');
   const adminRoutes = loadRoute('Admin', './routes/admin');
   const ipSettingsRoutes = loadRoute('IP Settings', './routes/ip-settings');
+  
+  // ★ここに移動しました★
+  const icCardRoutes = loadRoute('IC Card', './routes/ic-card');
 
   log('\n✅ 全ルートの読み込み完了\n');
 
@@ -125,6 +150,10 @@ try {
 
   // --- ルーティング ---
   app.use('/api/auth', authRoutes);
+  
+  // ★ここに移動しました★
+  app.use('/api/ic-card', icCardRoutes);
+
   app.use('/api/users', userRoutes);
   app.use('/api/attendance', attendanceStatsRoutes); // 統計エンドポイント
   app.use('/api/attendance', attendanceRoutes);
@@ -167,6 +196,25 @@ try {
   // --- グローバルエラーハンドラ ---
   app.use(errorHandler);
 
+  // ▼▼▼ 自動退勤バッチ（毎日 23:59 に実行） ▼▼▼
+cron.schedule('59 23 * * *', async () => {
+  console.log('🕒 [自動退勤] バッチ処理を開始します...');
+  try {
+    // 条件: 「今日の日付」で、「退勤時刻が入っていない（またはstatusが出席のまま）」のレコードを更新
+    // ここでは status が 'present' のものを 'auto_left' (自動退勤) に変更する例です
+    
+    const result = await query(
+      `UPDATE user_attendance_records 
+       SET status = 'auto_left', updated_at = NOW() 
+       WHERE date = CURDATE() AND status = 'present'`
+    );
+    
+    console.log(`✅ [自動退勤] ${result.affectedRows} 件のデータを自動退勤扱いにしました`);
+  } catch (error) {
+    console.error('❌ [自動退勤] エラーが発生しました', error);
+  }
+});
+  
   // --- サーバー起動 ---
   const startServer = async () => {
     try {

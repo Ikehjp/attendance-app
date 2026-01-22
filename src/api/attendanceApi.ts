@@ -239,4 +239,20 @@ export const attendanceApi = {
   updateUserRole: async (userId: number | string, newRole: string): Promise<ApiResponse> => {
     return (await apiClient.put(`/admin/users/${userId}/role`, { newRole })) as unknown as ApiResponse;
   },
+
+  // ▼▼▼ 追加: ICカード登録用API ▼▼▼
+  startIcRegistration: async () => {
+    const response = await apiClient.post('/ic-card/register/start');
+    return response.data;
+  },
+
+  getIcRegistrationStatus: async () => {
+    const response = await apiClient.get('/ic-card/register/status');
+    return response.data;
+  },
+
+  confirmIcRegistration: async () => {
+    const response = await apiClient.post('/ic-card/register/confirm');
+    return response.data;
+  }
 };

@@ -217,68 +217,7 @@
   }
 }
 
-/* ダークモード対応 */
-@media (prefers-color-scheme: dark) {
-  .profile-container {
-    background: #1f2937;
-    color: #f9fafb;
-  }
-
-  .profile-header {
-    background: #111827;
-    border-bottom-color: #374151;
-  }
-
-  .profile-header h1 {
-    color: #f9fafb;
-  }
-
-  .profile-card {
-    background: #1f2937;
-    border-color: #374151;
-  }
-
-  .profile-details h3 {
-    color: #f9fafb;
-  }
-
-  .profile-field label {
-    color: #d1d5db;
-  }
-
-  .field-value {
-    background: #374151;
-    color: #f3f4f6;
-  }
-
-  .field-value--muted {
-    color: #9ca3af;
-  }
-
-  .form-input {
-    background: #374151;
-    border-color: #4b5563;
-    color: #f9fafb;
-  }
-
-  .form-input:focus {
-    border-color: #3b82f6;
-    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.25);
-  }
-
-  .profile-groups {
-    background: #111827;
-    border-color: #374151;
-  }
-
-  .profile-groups h3 {
-    color: #f9fafb;
-  }
-
-  .profile-groups p {
-    color: #9ca3af;
-  }
-}
+/* ▼▼▼ 修正: ダークモード自動同期(@media prefers-color-scheme)を削除しました ▼▼▼ */
 
 /* 入力フィールド（モダンSaaSスタイル） */
 .edit-input {
