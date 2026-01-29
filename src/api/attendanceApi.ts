@@ -162,6 +162,10 @@ export const attendanceApi = {
     return (await apiClient.post('/qr/scan/confirm', { studentId, classId, scanToken })) as unknown as ApiResponse;
   },
 
+  scanQRCodeWithValidation: async (studentId: number | string, qrCode: string): Promise<ApiResponse> => {
+    return (await apiClient.post('/qr/scan-with-validation', { studentId, qrCode })) as unknown as ApiResponse;
+  },
+
   confirmClassAttendance: async (classId: number | string, timestamp: string): Promise<ApiResponse> => {
     return (await apiClient.post('/attendance/confirm', { classId, timestamp })) as unknown as ApiResponse;
   },
@@ -254,5 +258,5 @@ export const attendanceApi = {
   confirmIcRegistration: async () => {
     const response = await apiClient.post('/ic-card/register/confirm');
     return response.data;
-  }
+  },
 };

@@ -652,5 +652,62 @@ th {
   gap: 0.75rem;
   margin-top: 1rem;
   justify-content: center;
-  /* Center the buttons */
+}
+
+/* --------------------------
+   Mobile Optimization
+   -------------------------- */
+
+/* iOS Safari: 入力時の自動ズームを防止 (16px以上) */
+@media screen and (max-width: 768px) {
+
+  input,
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+}
+
+/* タップ領域の確保 (Touch Targets - 44px) */
+.touch-target {
+  min-width: 44px;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+button.icon-btn {
+  min-width: 44px;
+  min-height: 44px;
+}
+
+/* モバイル向けコンテナパディング調整 */
+@media (max-width: 768px) {
+  .p-4 {
+    padding: 1rem;
+  }
+
+  .p-6 {
+    padding: 1.25rem;
+  }
+
+  .p-8 {
+    padding: 1.5rem;
+  }
+
+  .card {
+    padding: 1.25rem;
+  }
+}
+
+/* 全幅ボタン (モバイル用) */
+.btn-full-mobile {
+  width: 100%;
+}
+
+@media (min-width: 769px) {
+  .btn-full-mobile {
+    width: auto;
+  }
 }

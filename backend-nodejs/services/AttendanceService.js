@@ -1,5 +1,6 @@
 const { query, transaction } = require('../config/database');
 const logger = require('../utils/logger');
+const TimetableService = require('./TimetableService');
 
 /**
  * 出欠管理サービス
@@ -333,19 +334,33 @@ class AttendanceService {
       const now = new Date();
       const currentTime = now.toTimeString().slice(0, 8); // HH:MM:SS
 
-      // 1. 組織設定を取得
-      const orgSettings = await query(
-        'SELECT late_limit_minutes, date_reset_time FROM organizations WHERE id = ?',
-        [organizationId]
-      );
+      // 1. 組織設定を取得 (TimetableServiceを使用)
+      const settingsResult = await TimetableService.getOrganizationSettings(organizationId);
 
-      if (orgSettings.length === 0) {
-        return { success: false, message: '組織設定が見つかりません' };
+      let lateLimitMinutes = 15;
+      let dateResetTime = '04:00:00';
+      let schoolStartTime = '09:00:00';
+      let timeSlots = []; // デフォルト値はTimetableServiceが提供
+
+      if (settingsResult.success && settingsResult.data) {
+        lateLimitMinutes = settingsResult.data.lateLimitMinutes;
+        dateResetTime = settingsResult.data.dateResetTime;
+        schoolStartTime = settingsResult.data.schoolStartTime;
+        timeSlots = settingsResult.data.timeSlots || [];
+      } else {
+        logger.warn('組織設定取得失敗、デフォルト値を使用します', { organizationId });
+        // フォールバック（TimetableServiceが失敗した場合）
+        timeSlots = [
+          { periodNumber: 1, periodName: '1限', startTime: '09:00', endTime: '10:30' },
+          { periodNumber: 2, periodName: '2限', startTime: '10:40', endTime: '12:10' },
+          { periodNumber: 3, periodName: '3限', startTime: '13:00', endTime: '14:30' },
+          { periodNumber: 4, periodName: '4限', startTime: '14:40', endTime: '16:10' },
+          { periodNumber: 5, periodName: '5限', startTime: '16:20', endTime: '17:50' },
+        ];
       }
 
-      const { late_limit_minutes, date_reset_time } = orgSettings[0];
-      const lateLimitMinutes = late_limit_minutes || 15;
-      const resetTime = date_reset_time || '04:00:00';
+      const resetTime = dateResetTime;
+
 
       // 2. 論理日付を計算（リセット時間前なら前日扱い）
       let logicalDate = new Date(now);
@@ -354,48 +369,51 @@ class AttendanceService {
       }
       const logicalDateStr = logicalDate.toISOString().split('T')[0];
 
-      // 3. 該当する時限を取得
-      const timeSlot = await query(
-        `SELECT id, period_number, period_name, start_time, end_time
-         FROM organization_time_slots
-         WHERE organization_id = ?
-           AND start_time <= ? AND end_time >= ?
-         LIMIT 1`,
-        [organizationId, currentTime, currentTime]
-      );
+      // 3. 遅刻限度時刻を計算 (学校開始時間 + 遅刻許容時間)
+      const [sh, sm, ss] = schoolStartTime.split(':').map(Number);
+      const schoolStartDate = new Date(logicalDate);
+      schoolStartDate.setHours(sh, sm + lateLimitMinutes, ss || 0);
+      const schoolLateLimitTime = schoolStartDate.toTimeString().slice(0, 8);
+
+
+      // 4. 該当する時限を取得 (表示用)
+      let currentPeriodName = null;
+      const currentHM = currentTime.substring(0, 5); // HH:MM Comparison
+
+      for (const slot of timeSlots) {
+        if (currentHM >= slot.startTime && currentHM <= slot.endTime) {
+          currentPeriodName = slot.periodName || `${slot.periodNumber}限`;
+          break;
+        }
+      }
 
       let status = 'present';
       let message = '出席が記録されました';
       let action = 'none';
-      let classId = classSessionId;
 
-      if (timeSlot.length > 0) {
-        const slot = timeSlot[0];
-        const startTime = slot.start_time;
-
-        // 開始時間 + 遅刻許容時間を計算
-        const [hours, minutes, seconds] = startTime.split(':').map(Number);
-        const startDate = new Date(logicalDate);
-        startDate.setHours(hours, minutes + lateLimitMinutes, seconds || 0);
-        const lateLimitTime = startDate.toTimeString().slice(0, 8);
-
-        // 4. 判定
-        if (currentTime <= startTime) {
-          status = 'present';
-          message = `出席が記録されました（${slot.period_name || slot.period_number + '限'}）`;
-        } else if (currentTime <= lateLimitTime) {
-          status = 'present';
-          message = `出席が記録されました（${slot.period_name || slot.period_number + '限'}）`;
-        } else {
-          status = 'late';
-          message = `遅刻です。開始時間から${lateLimitMinutes}分以上経過しています。`;
-          action = 'redirect_to_form';
-        }
-      } else {
-        // 該当する時限がない場合
+      // 5. 判定ロジック
+      // 学校全体の開始時間を基準に判定
+      if (currentTime <= schoolLateLimitTime) {
         status = 'present';
-        message = '出席が記録されました';
+        message = currentPeriodName
+          ? `出席が記録されました（${currentPeriodName}）`
+          : '出席が記録されました（授業外）';
+      } else {
+        // 遅刻判定
+        status = 'late';
+        message = `遅刻です。登校指定時間（${schoolStartTime.substring(0, 5)}）を過ぎています。`;
+        if (currentPeriodName) {
+          message += `（現在: ${currentPeriodName}）`;
+        }
+        action = 'redirect_to_form';
       }
+
+      // 既に今日の出席記録があるかチェック（二重記録防止または更新）
+      // ... (existing check logic is inside recordAttendance, but we might want to be careful not to overwrite 'late' with 'present' mistakenly if scanned twice? 
+      //  -> recordAttendance handles updates. If status is same, it updates timestamp. If different, it overwrites.
+      //  Ideally, once 'present', it stays 'present'. If 'late', remains 'late' unless manually fixed? 
+      //  For simple logic: just overwrite with current status.)
+
 
       // 5. 出欠記録を作成
       await this.recordAttendance(
@@ -417,7 +435,7 @@ class AttendanceService {
         logicalDate: logicalDateStr,
         action,
         message,
-        classId
+        classId: classSessionId
       };
     } catch (error) {
       logger.error('時間ベース出欠判定エラー:', error.message);
@@ -425,6 +443,59 @@ class AttendanceService {
         success: false,
         message: '出欠判定処理に失敗しました',
         error: error.message
+      };
+    }
+  }
+  /**
+   * 日別欠席詳細の取得
+   * @param {string} date - YYYY-MM-DD
+   */
+  static async getAbsenceDetails(date) {
+    try {
+      // 欠席・遅刻・早退の記録を取得
+      const records = await query(
+        `SELECT 
+           uar.status, 
+           uar.reason, 
+           u.name, 
+           u.student_id as studentId
+         FROM user_attendance_records uar
+         JOIN users u ON uar.user_id = u.id
+         WHERE uar.date = ? 
+           AND uar.status IN ('absent', 'late', 'early_departure')`,
+        [date]
+      );
+
+      // カテゴリ別に分類
+      const absenceData = {
+        absent: [],
+        late: [],
+        early_departure: []
+      };
+
+      records.forEach(record => {
+        const studentData = {
+          studentId: record.studentId || 'N/A',
+          name: record.name,
+          reason: record.reason,
+          status: record.status // approved/pendingなども必要ならここで調整
+        };
+
+        if (absenceData[record.status]) {
+          absenceData[record.status].push(studentData);
+        }
+      });
+
+      return {
+        success: true,
+        data: absenceData
+      };
+    } catch (error) {
+      logger.error('欠席詳細取得エラー:', error.message);
+      return {
+        success: false,
+        message: '欠席詳細の取得に失敗しました',
+        data: { absent: [], late: [], early_departure: [] }
       };
     }
   }

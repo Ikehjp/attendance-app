@@ -1,0 +1,46 @@
+{
+  "success": true,
+  "data": {
+    "lateLimitMinutes": 0,
+    "dateResetTime": "04:00:00",
+    "schoolStartTime": "09:00:00",
+    "schoolEndTime": "16:00:00",
+    "timeSlots": [
+      {
+        "id": 64,
+        "periodNumber": 1,
+        "periodName": "1限",
+        "startTime": "09:05",
+        "endTime": "09:55"
+      },
+      {
+        "id": 65,
+        "periodNumber": 2,
+        "periodName": "3限",
+        "startTime": "10:05",
+        "endTime": "10:55"
+      },
+      {
+        "id": 66,
+        "periodNumber": 3,
+        "periodName": "4限",
+        "startTime": "11:05",
+        "endTime": "11:55"
+      },
+      {
+        "id": 67,
+        "periodNumber": 4,
+        "periodName": "5限",
+        "startTime": "13:05",
+        "endTime": "13:55"
+      },
+      {
+        "id": 68,
+        "periodNumber": 5,
+        "periodName": "5限",
+        "startTime": "14:05",
+        "endTime": "14:55"
+      }
+    ]
+  }
+}

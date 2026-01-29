@@ -9,7 +9,7 @@ export const timetableApi = {
    * @param {Object} data - 時間割データ
    * @returns {Promise} 作成結果
    */
-  createTimetable: async(data: any): Promise<ApiResponse> => {
+  createTimetable: async (data: any): Promise<ApiResponse> => {
     return (await apiClient.post('/timetables', data)) as unknown as ApiResponse;
   },
 
@@ -18,7 +18,7 @@ export const timetableApi = {
    * @param {number} groupId - グループID
    * @returns {Promise} 時間割一覧
    */
-  getTimetablesByGroup: async(groupId: number | string): Promise<ApiResponse> => {
+  getTimetablesByGroup: async (groupId: number | string): Promise<ApiResponse> => {
     return (await apiClient.get(`/timetables/group/${groupId}`)) as unknown as ApiResponse;
   },
 
@@ -27,7 +27,7 @@ export const timetableApi = {
    * @param {number} timetableId - 時間割ID
    * @returns {Promise} 時間割詳細
    */
-  getTimetable: async(timetableId: number | string): Promise<ApiResponse> => {
+  getTimetable: async (timetableId: number | string): Promise<ApiResponse> => {
     return (await apiClient.get(`/timetables/${timetableId}`)) as unknown as ApiResponse;
   },
 
@@ -37,7 +37,7 @@ export const timetableApi = {
    * @param {Object} data - 更新データ
    * @returns {Promise} 更新結果
    */
-  updateTimetable: async(timetableId: number | string, data: any): Promise<ApiResponse> => {
+  updateTimetable: async (timetableId: number | string, data: any): Promise<ApiResponse> => {
     return (await apiClient.put(`/timetables/${timetableId}`, data)) as unknown as ApiResponse;
   },
 
@@ -46,7 +46,7 @@ export const timetableApi = {
    * @param {number} timetableId - 時間割ID
    * @returns {Promise} 削除結果
    */
-  deleteTimetable: async(timetableId: number | string): Promise<ApiResponse> => {
+  deleteTimetable: async (timetableId: number | string): Promise<ApiResponse> => {
     return (await apiClient.delete(`/timetables/${timetableId}`)) as unknown as ApiResponse;
   },
 
@@ -56,7 +56,7 @@ export const timetableApi = {
    * @param {Object} sessionData - セッションデータ
    * @returns {Promise} 追加結果
    */
-  addClassSession: async(timetableId: number | string, sessionData: any): Promise<ApiResponse> => {
+  addClassSession: async (timetableId: number | string, sessionData: any): Promise<ApiResponse> => {
     return (await apiClient.post(`/timetables/${timetableId}/sessions`, sessionData)) as unknown as ApiResponse;
   },
 
@@ -66,7 +66,7 @@ export const timetableApi = {
    * @param {Object} data - 更新データ
    * @returns {Promise} 更新結果
    */
-  updateClassSession: async(sessionId: number | string, data: any): Promise<ApiResponse> => {
+  updateClassSession: async (sessionId: number | string, data: any): Promise<ApiResponse> => {
     return (await apiClient.put(`/timetables/sessions/${sessionId}`, data)) as unknown as ApiResponse;
   },
 
@@ -75,7 +75,7 @@ export const timetableApi = {
    * @param {number} sessionId - セッションID
    * @returns {Promise} 削除結果
    */
-  deleteClassSession: async(sessionId: number | string): Promise<ApiResponse> => {
+  deleteClassSession: async (sessionId: number | string): Promise<ApiResponse> => {
     return (await apiClient.delete(`/timetables/sessions/${sessionId}`)) as unknown as ApiResponse;
   },
 
@@ -86,7 +86,7 @@ export const timetableApi = {
    * @param {string} reason - 理由（オプション）
    * @returns {Promise} 設定結果
    */
-  toggleSessionCancellation: async(sessionId: number | string, isCancelled: boolean, reason: string = ''): Promise<ApiResponse> => {
+  toggleSessionCancellation: async (sessionId: number | string, isCancelled: boolean, reason: string = ''): Promise<ApiResponse> => {
     return (await apiClient.put(`/timetables/sessions/${sessionId}/cancel`, {
       isCancelled,
       reason,
@@ -101,7 +101,7 @@ export const timetableApi = {
    * @param {string} endDate - 終了日（YYYY-MM-DD）
    * @returns {Promise} カレンダーデータ
    */
-  getTimetableByPeriod: async(groupId: number | string, periodType: string, startDate: string, endDate: string): Promise<ApiResponse> => {
+  getTimetableByPeriod: async (groupId: number | string, periodType: string, startDate: string, endDate: string): Promise<ApiResponse> => {
     return (await apiClient.get(`/timetables/calendar/${groupId}`, {
       params: {
         periodType,
@@ -117,7 +117,7 @@ export const timetableApi = {
    * @param {number} groupId - グループID
    * @returns {Promise} インポート結果
    */
-  importFromExcel: async(file: File, groupId: number | string): Promise<ApiResponse> => {
+  importFromExcel: async (file: File, groupId: number | string): Promise<ApiResponse> => {
     const formData = new FormData();
     formData.append('file', file);
     formData.append('groupId', groupId.toString());
@@ -131,7 +131,7 @@ export const timetableApi = {
    * 時間割テンプレート一覧取得
    * @returns {Promise} テンプレート一覧
    */
-  getTemplates: async(): Promise<ApiResponse> => {
+  getTemplates: async (): Promise<ApiResponse> => {
     return (await apiClient.get('/timetables/templates')) as unknown as ApiResponse;
   },
 
@@ -140,7 +140,7 @@ export const timetableApi = {
    * @param {Object} data - テンプレートデータ
    * @returns {Promise} 作成結果
    */
-  createTemplate: async(data: any): Promise<ApiResponse> => {
+  createTemplate: async (data: any): Promise<ApiResponse> => {
     return (await apiClient.post('/timetables/templates', data)) as unknown as ApiResponse;
   },
 
@@ -152,7 +152,7 @@ export const timetableApi = {
    * @param {string} semester - 学期
    * @returns {Promise} 作成結果
    */
-  createFromTemplate: async(templateId: number | string, groupId: number | string, academicYear: string, semester: string): Promise<ApiResponse> => {
+  createFromTemplate: async (templateId: number | string, groupId: number | string, academicYear: string, semester: string): Promise<ApiResponse> => {
     return (await apiClient.post(`/timetables/templates/${templateId}/apply`, {
       groupId,
       academicYear,
@@ -168,7 +168,7 @@ export const timetableApi = {
    * 組織の時間割設定を取得
    * @returns {Promise} 設定情報
    */
-  getOrganizationSettings: async(): Promise<ApiResponse> => {
+  getOrganizationSettings: async (): Promise<ApiResponse> => {
     return (await apiClient.get('/timetables/settings')) as unknown as ApiResponse;
   },
 
@@ -177,8 +177,93 @@ export const timetableApi = {
    * @param {Object} settings - 設定データ
    * @returns {Promise} 保存結果
    */
-  saveOrganizationSettings: async(settings: any): Promise<ApiResponse> => {
+  saveOrganizationSettings: async (settings: any): Promise<ApiResponse> => {
     return (await apiClient.post('/timetables/settings', settings)) as unknown as ApiResponse;
+  },
+
+  // ========================================
+  // 週パターン展開・個別編集関連API（新規追加）
+  // ========================================
+
+  /**
+   * 週パターンを指定期間に展開
+   * @param {number} timetableId - 時間割ID
+   * @param {Object} pattern - 週パターン（曜日ごとの授業配置）
+   * @param {string} startDate - 開始日（YYYY-MM-DD）
+   * @param {string} endDate - 終了日（YYYY-MM-DD）
+   * @param {boolean} skipWeekends - 週末をスキップするか（デフォルト: true）
+   * @returns {Promise} 展開結果
+   */
+  expandWeeklyPattern: async (
+    timetableId: number | string,
+    pattern: Record<number, any[]>,
+    startDate: string,
+    endDate: string,
+    skipWeekends: boolean = true,
+  ): Promise<ApiResponse> => {
+    return (await apiClient.post(`/timetables/${timetableId}/expand`, {
+      pattern,
+      startDate,
+      endDate,
+      skipWeekends,
+    })) as unknown as ApiResponse;
+  },
+
+  /**
+   * 指定日の全授業を一括休講
+   * @param {string} date - 日付（YYYY-MM-DD）
+   * @param {string} reason - 休講理由
+   * @param {Object} options - オプション（groupId, timetableId等）
+   * @returns {Promise} 一括休講結果
+   */
+  bulkCancelSessions: async (
+    date: string,
+    reason: string,
+    options: { groupId?: number | string; timetableId?: number | string } = {},
+  ): Promise<ApiResponse> => {
+    return (await apiClient.post('/timetables/bulk-cancel', {
+      date,
+      reason,
+      ...options,
+    })) as unknown as ApiResponse;
+  },
+
+  /**
+   * 指定日の一括休講を取り消し
+   * @param {string} date - 日付（YYYY-MM-DD）
+   * @param {Object} options - オプション（groupId, timetableId等）
+   * @returns {Promise} 休講取り消し結果
+   */
+  bulkRestoreSessions: async (
+    date: string,
+    options: { groupId?: number | string; timetableId?: number | string } = {},
+  ): Promise<ApiResponse> => {
+    return (await apiClient.post('/timetables/bulk-restore', {
+      date,
+      ...options,
+    })) as unknown as ApiResponse;
+  },
+
+  /**
+   * テンプレートを再適用
+   * @param {number} timetableId - 時間割ID
+   * @param {Object} pattern - 週パターン
+   * @param {Object} options - オプション（preserveManualChanges, startDate, endDate）
+   * @returns {Promise} 再適用結果
+   */
+  reapplyTemplate: async (
+    timetableId: number | string,
+    pattern: Record<number, any[]>,
+    options: {
+      preserveManualChanges?: boolean;
+      startDate?: string;
+      endDate?: string
+    } = {},
+  ): Promise<ApiResponse> => {
+    return (await apiClient.post(`/timetables/${timetableId}/reapply-template`, {
+      pattern,
+      ...options,
+    })) as unknown as ApiResponse;
   },
 };
 

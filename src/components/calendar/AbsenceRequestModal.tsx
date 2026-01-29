@@ -27,13 +27,6 @@ const AbsenceRequestModal: React.FC<AbsenceRequestModalProps> = ({ isOpen, onClo
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
-  // ポータル用のコンテナを作成（Hooksは条件分岐の前に配置）
-  const [portalContainer] = useState(() => {
-    const div = document.createElement('div');
-    div.id = `absence-request-modal-portal-${Date.now()}`;
-    return div;
-  });
-
   // defaultDateが変わったらフォームの日付を更新
   useEffect(() => {
     if (defaultDate) {
@@ -46,24 +39,12 @@ const AbsenceRequestModal: React.FC<AbsenceRequestModalProps> = ({ isOpen, onClo
     }
   }, [defaultDate]);
 
-  // ポータルのマウント/アンマウント
-  useEffect(() => {
-    if (isOpen) {
-      document.body.appendChild(portalContainer);
-    }
-    return () => {
-      if (document.body.contains(portalContainer)) {
-        document.body.removeChild(portalContainer);
-      }
-    };
-  }, [portalContainer, isOpen]);
-
   const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = async(e: FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
 
     if (!formData.reason.trim()) {
@@ -97,7 +78,7 @@ const AbsenceRequestModal: React.FC<AbsenceRequestModalProps> = ({ isOpen, onClo
     weekday: 'long',
   }) : '';
 
-  return ReactDOM.createPortal(
+  const modalContent = (
     <div className="absence-modal-overlay" onClick={onClose}>
       <div className="absence-modal" onClick={(e) => e.stopPropagation()}>
         <div className="absence-modal-header">
@@ -169,9 +150,14 @@ const AbsenceRequestModal: React.FC<AbsenceRequestModalProps> = ({ isOpen, onClo
           </div>
         </form>
       </div>
-    </div>,
-    portalContainer,
+    </div>
   );
+
+  // モーダルルートを取得
+  const modalRoot = document.getElementById('modal-root');
+  if (!modalRoot) return null;
+
+  return ReactDOM.createPortal(modalContent, modalRoot);
 };
 
 export default AbsenceRequestModal;

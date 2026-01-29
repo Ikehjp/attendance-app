@@ -325,4 +325,30 @@ router.delete('/:id', authenticate, async (req, res) => {
   }
 });
 
+/**
+ * 欠席詳細の取得
+ */
+router.get('/absence-details/:date', authenticate, async (req, res) => {
+  try {
+    const { date } = req.params;
+
+    // 教員・管理者・従業員のみアクセス可能
+    if (['student'].includes(req.user.role)) {
+      return res.status(403).json({
+        success: false,
+        message: '権限がありません'
+      });
+    }
+
+    const result = await AttendanceService.getAbsenceDetails(date);
+    res.json(result);
+  } catch (error) {
+    logger.error('欠席詳細取得APIエラー:', error.message);
+    res.status(500).json({
+      success: false,
+      message: 'サーバーエラーが発生しました'
+    });
+  }
+});
+
 module.exports = router;

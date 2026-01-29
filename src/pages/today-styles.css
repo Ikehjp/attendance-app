@@ -1,0 +1,12 @@
+﻿
+/* 今日の日付のスタイル */
+.calendar-day.today {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.15) 0%, rgba(96, 165, 250, 0.2) 100%) !important;
+  border: 2px solid #3b82f6 !important;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
+}
+
+.calendar-day.today .day-number {
+  font-weight: 700;
+  color: #1e40af;
+}

@@ -158,6 +158,21 @@ async function addMissingTablesAndColumns() {
             console.log(error.code === 'ER_DUP_FIELDNAME' ? '⊙ 既に存在' : `⚠ エラー: ${error.message}`);
         }
 
+        // users.felica_idm
+        console.log('\n[4/4] users.felica_idm を追加中...');
+        try {
+            await conn.query('ALTER TABLE users ADD COLUMN felica_idm VARCHAR(255) DEFAULT NULL COMMENT "FeliCa IDm"');
+            console.log('✓ felica_idm カラム追加完了');
+            try {
+                await conn.query('ALTER TABLE users ADD UNIQUE KEY uk_felica_idm (felica_idm)');
+                console.log('✓ unique key (uk_felica_idm) 追加完了');
+            } catch (idxError) {
+                console.log(idxError.code === 'ER_DUP_KEYNAME' ? '⊙ ユニークキーは既に存在' : `⚠ キーエラー: ${idxError.message}`);
+            }
+        } catch (error) {
+            console.log(error.code === 'ER_DUP_FIELDNAME' ? '⊙ 既に存在' : `⚠ エラー: ${error.message}`);
+        }
+
         console.log('\n=== すべての処理が完了しました ===\n');
     } catch (error) {
         console.error('エラー:', error.message);

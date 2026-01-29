@@ -153,7 +153,7 @@ class ApprovalService {
      */
     static async _updateAttendanceStatus(conn, requestData) {
         try {
-            const { student_id, class_session_id, request_type, request_date } = requestData;
+            const { student_id, class_session_id, request_type, request_date, reason } = requestData;
 
             if (!student_id || !request_date) {
                 logger.warn('出欠ステータス更新スキップ: student_id または request_date がありません');
@@ -164,12 +164,13 @@ class ApprovalService {
             let newStatus;
             switch (request_type) {
                 case 'official_absence':
-                    newStatus = 'excused'; // 公欠
+                    newStatus = 'absent'; // 公欠もabsent扱いにするか、システムに合わせて調整
                     break;
                 case 'official_late':
                     newStatus = 'late'; // 公認遅刻
                     break;
                 case 'early_departure':
+                case 'early_leave': // 表記ゆれ対応
                     newStatus = 'early_departure'; // 早退
                     break;
                 case 'absence':
@@ -180,49 +181,84 @@ class ApprovalService {
                     newStatus = 'late'; // 遅刻
                     break;
                 default:
-                    newStatus = 'excused';
+                    newStatus = 'present'; // デフォルトは出席にしておくのが無難だが、申請承認なら欠席系のはず
+            }
+
+            // 公欠などはabsent扱いにするが、備考に残す
+            if (request_type === 'official_absence') {
+                newStatus = 'absent';
             }
 
             // 日付をフォーマット（タイムゾーン問題を回避）
             let formattedDate;
             if (typeof request_date === 'string') {
-                // 文字列の場合、YYYY-MM-DD部分のみを抽出
                 formattedDate = request_date.split('T')[0].split(' ')[0];
             } else if (request_date instanceof Date) {
-                // Dateオブジェクトの場合、ローカルタイムを使用
                 const year = request_date.getFullYear();
                 const month = String(request_date.getMonth() + 1).padStart(2, '0');
                 const day = String(request_date.getDate()).padStart(2, '0');
                 formattedDate = `${year}-${month}-${day}`;
             } else {
-                // その他の場合
                 formattedDate = String(request_date).split('T')[0].split(' ')[0];
             }
 
-            logger.info(`日付フォーマット: 入力=${request_date}, 出力=${formattedDate}`);
+            logger.info(`出欠ステータス更新開始: student=${student_id}, date=${formattedDate}, type=${request_type} => status=${newStatus}`);
 
-            // 既存の出欠記録を更新、なければ作成
-            // class_idがnullの場合は0を使用
+            // 1. detailed_attendance_records の更新（授業ごとの出欠）
             const classId = class_session_id || 0;
+            const detailedUpsertSql = `
+                INSERT INTO detailed_attendance_records 
+                (student_id, class_id, attendance_date, status, notes)
+                VALUES (?, ?, ?, ?, '承認済み申請による自動更新')
+                ON DUPLICATE KEY UPDATE 
+                  status = VALUES(status),
+                  notes = CONCAT(IFNULL(notes, ''), ' | 承認済み申請による更新')
+            `;
 
-            const upsertSql = `
-        INSERT INTO detailed_attendance_records 
-        (student_id, class_id, attendance_date, status, notes)
-        VALUES (?, ?, ?, ?, '承認済み申請による自動更新')
-        ON DUPLICATE KEY UPDATE 
-          status = ?,
-          notes = CONCAT(IFNULL(notes, ''), ' | 承認済み申請による更新')
-      `;
-
-            await conn.query(upsertSql, [
+            await conn.query(detailedUpsertSql, [
                 student_id,
                 classId,
                 formattedDate,
-                newStatus,
                 newStatus
             ]);
 
-            logger.info(`出欠ステータス更新: student=${student_id}, date=${formattedDate}, status=${newStatus}`);
+            // 2. user_attendance_records の更新（日ごとの出欠）
+            // まずstudent_idからuser_idを取得
+            const userSql = 'SELECT id FROM users WHERE student_id = ?';
+            const [users] = await conn.query(userSql, [student_id]);
+
+            if (users.length > 0) {
+                const userId = users[0].id;
+
+                // 既存レコードを確認
+                const checkSql = 'SELECT id FROM user_attendance_records WHERE user_id = ? AND date = ?';
+                const [existing] = await conn.query(checkSql, [userId, formattedDate]);
+
+                if (existing.length > 0) {
+                    // 更新
+                    const updateSql = `
+                        UPDATE user_attendance_records 
+                        SET status = ?, 
+                            reason = COALESCE(?, reason),
+                            updated_at = CURRENT_TIMESTAMP
+                        WHERE id = ?
+                    `;
+                    await conn.query(updateSql, [newStatus, reason, existing[0].id]);
+                    logger.info(`user_attendance_records 更新: user_id=${userId}, date=${formattedDate}, status=${newStatus}`);
+                } else {
+                    // 新規作成
+                    const insertSql = `
+                        INSERT INTO user_attendance_records 
+                        (user_id, date, status, check_in_time, check_out_time, reason)
+                        VALUES (?, ?, ?, NOW(), NOW(), ?)
+                    `;
+                    await conn.query(insertSql, [userId, formattedDate, newStatus, reason]);
+                    logger.info(`user_attendance_records 作成: user_id=${userId}, date=${formattedDate}, status=${newStatus}`);
+                }
+            } else {
+                logger.warn(`ユーザーが見つからないため user_attendance_records を更新できませんでした: student_id=${student_id}`);
+            }
+
         } catch (error) {
             logger.error('出欠ステータス更新エラー:', error);
             // エラーをスローせず、ログのみ記録（承認処理自体は成功とする）

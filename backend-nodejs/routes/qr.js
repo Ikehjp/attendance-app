@@ -102,9 +102,10 @@ router.post('/scan-with-validation', authenticate, [
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
+      logger.warn('[QR Scan] バリデーションエラー', { errors: errors.array(), body: req.body });
       return res.status(400).json({
         success: false,
-        message: '入力データにエラーがあります',
+        message: '入力データにエラーがあります: ' + errors.array().map(e => e.msg).join(', '),
         errors: errors.array()
       });
     }
@@ -115,11 +116,28 @@ router.post('/scan-with-validation', authenticate, [
     const ipAddress = req.ip || req.connection.remoteAddress || 'unknown';
     const userAgent = req.get('User-Agent') || 'unknown';
 
+    // [追加] スキャン試行ログ
+    logger.info('[QR Scan Attempt] スキャン試行', {
+      studentId,
+      ipAddress,
+      userAgent,
+      qrCode: qrCode.substring(0, 20) + '...' // 完全なQRコードは長すぎる可能性があるので省略
+    });
+
     const result = await QRService.scanQRCodeWithIPValidation(
       { qrCode, studentId },
       ipAddress,
       userAgent
     );
+
+    // [追加] スキャン結果ログ
+    logger.info('[QR Scan Result] スキャン結果', {
+      success: result.success,
+      studentId,
+      ipAddress,
+      status: result.success ? result.data?.status : 'failed',
+      message: result.message
+    });
 
     if (result.success) {
       res.status(201).json(result);

@@ -1,0 +1,106 @@
+.yearly-view {
+    background: white;
+    border-radius: 0 0 12px 12px;
+    padding: 20px;
+    overflow-y: auto;
+    max-height: min(700px, 80vh);
+}
+
+.yearly-header {
+    text-align: center;
+    margin-bottom: 24px;
+}
+
+.yearly-header h2 {
+    font-size: 1.5rem;
+    color: #1e293b;
+    margin: 0;
+}
+
+.months-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 20px;
+}
+
+.mini-calendar {
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 12px;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.mini-calendar:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    border-color: #cbd5e1;
+}
+
+.mini-calendar-header {
+    font-weight: bold;
+    text-align: center;
+    margin-bottom: 8px;
+    color: #334155;
+}
+
+.mini-calendar-weekdays {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    text-align: center;
+    font-size: 0.7rem;
+    color: #94a3b8;
+    margin-bottom: 4px;
+}
+
+.mini-calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 2px;
+}
+
+.mini-day {
+    aspect-ratio: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    border-radius: 50%;
+    color: #64748b;
+}
+
+.mini-day.empty {
+    pointer-events: none;
+}
+
+.mini-day.status-present {
+    background-color: #dcfce7;
+    color: #166534;
+    font-weight: bold;
+}
+
+.mini-day.status-absent {
+    background-color: #fee2e2;
+    color: #991b1b;
+    font-weight: bold;
+}
+
+.mini-day.status-late {
+    background-color: #fef3c7;
+    color: #92400e;
+    font-weight: bold;
+}
+
+.mini-day.status-early-departure {
+    background-color: #ede9fe;
+    color: #5b21b6;
+    font-weight: bold;
+}/* 今日の日付のスタイル */
+.mini-day.today {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.25) 0%, rgba(96, 165, 250, 0.3) 100%) !important;
+  border: 2px solid #3b82f6 !important;
+  font-weight: 700;
+  color: #1e40af !important;
+  box-shadow: 0 0 4px rgba(59, 130, 246, 0.4);
+}
+

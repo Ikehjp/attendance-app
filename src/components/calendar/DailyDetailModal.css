@@ -1,0 +1,305 @@
+/* DailyDetailModal.css */
+
+.daily-detail-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    /* デスクトップでは中央 */
+    z-index: 1000;
+    animation: fadeIn 0.2s ease-out;
+}
+
+.daily-detail-modal-content {
+    background: white;
+    width: 90%;
+    max-width: 500px;
+    max-height: 85vh;
+    border-radius: 16px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    animation: slideUp 0.3s ease-out;
+}
+
+.daily-detail-header {
+    padding: 16px 20px;
+    border-bottom: 1px solid #e2e8f0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #f8fafc;
+}
+
+.daily-detail-header h2 {
+    margin: 0;
+    font-size: 1.25rem;
+    color: #334155;
+}
+
+.close-btn {
+    background: none;
+    border: none;
+    font-size: 2rem;
+    line-height: 1;
+    color: #64748b;
+    cursor: pointer;
+    padding: 0 8px;
+}
+
+.daily-detail-body {
+    padding: 20px;
+    overflow-y: auto;
+}
+
+.detail-section {
+    margin-bottom: 24px;
+}
+
+.detail-section:last-child {
+    margin-bottom: 0;
+}
+
+.detail-section h3 {
+    font-size: 1rem;
+    color: #64748b;
+    margin-bottom: 12px;
+    border-left: 4px solid #3b82f6;
+    padding-left: 8px;
+}
+
+.no-data {
+    color: #94a3b8;
+    font-style: italic;
+    padding: 8px;
+}
+
+/* Attendance Status Card */
+.attendance-status-card {
+    padding: 16px;
+    border-radius: 12px;
+    background-color: #f8fafc;
+    border: 1px solid #e2e8f0;
+}
+
+.attendance-status-card.status-present {
+    background-color: #f0fdf4;
+    border-color: #bbf7d0;
+}
+
+.attendance-status-card.status-absent {
+    background-color: #fef2f2;
+    border-color: #fecaca;
+}
+
+.attendance-status-card.status-late {
+    background-color: #fefce8;
+    border-color: #fef08a;
+}
+
+.attendance-status-card.status-early_departure {
+    background-color: #fffbeb;
+    border-color: #fde68a;
+}
+
+.status-badge-large {
+    font-size: 1.5rem;
+    font-weight: bold;
+    text-align: center;
+    margin-bottom: 16px;
+    color: #334155;
+}
+
+.time-info {
+    display: flex;
+    justify-content: space-around;
+    margin-bottom: 12px;
+}
+
+.time-row {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.time-row .label {
+    font-size: 0.8rem;
+    color: #64748b;
+}
+
+.time-row .value {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #1e293b;
+}
+
+.reason-info {
+    background: rgba(255, 255, 255, 0.6);
+    padding: 12px;
+    border-radius: 8px;
+    margin-top: 12px;
+}
+
+.reason-info .label {
+    font-size: 0.8rem;
+    color: #64748b;
+    margin-bottom: 4px;
+}
+
+.reason-info .value {
+    font-size: 1rem;
+    color: #334155;
+    margin: 0;
+}
+
+/* Requests List */
+.requests-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.request-card {
+    padding: 12px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    background: white;
+}
+
+.request-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.request-type {
+    font-weight: bold;
+    color: #475569;
+}
+
+.req-badge {
+    font-size: 0.75rem;
+    padding: 2px 8px;
+    border-radius: 12px;
+    color: white;
+}
+
+.req-badge.req-pending {
+    background-color: #94a3b8;
+}
+
+.req-badge.req-approved {
+    background-color: #22c55e;
+}
+
+.req-badge.req-rejected {
+    background-color: #ef4444;
+}
+
+.request-reason {
+    font-size: 0.9rem;
+    color: #64748b;
+    margin: 0;
+}
+
+/* Events List */
+.events-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.event-item-large {
+    padding: 12px;
+    background-color: #eff6ff;
+    border-left: 4px solid #3b82f6;
+    margin-bottom: 8px;
+    border-radius: 4px;
+    color: #1e40af;
+}
+
+/* Timetables List */
+.timetables-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.class-item {
+    display: flex;
+    padding: 12px;
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    align-items: center;
+}
+
+.class-item.cancelled {
+    background-color: #f1f5f9;
+    opacity: 0.7;
+}
+
+.class-time {
+    font-weight: bold;
+    color: #64748b;
+    width: 100px;
+    font-size: 0.9rem;
+}
+
+.class-info {
+    flex: 1;
+}
+
+.subject-name {
+    font-weight: 600;
+    color: #334155;
+}
+
+.room-name {
+    font-size: 0.8rem;
+    color: #94a3b8;
+}
+
+/* Mobile specific overrides */
+@media (max-width: 480px) {
+    .daily-detail-modal-overlay {
+        align-items: flex-end;
+        /* 下からスライドイン */
+    }
+
+    .daily-detail-modal-content {
+        width: 100%;
+        max-width: 100%;
+        border-radius: 16px 16px 0 0;
+        max-height: 90vh;
+    }
+}
+
+@keyframes slideUp {
+    from {
+        transform: translateY(100%);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}

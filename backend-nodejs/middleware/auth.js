@@ -122,10 +122,10 @@ const requireRole = (roles) => {
 
 /**
  * 管理者権限チェック（後方互換性のため残す）
- * owner または teacher を許可
+ * owner, admin, または teacher を許可
  */
 const requireAdmin = (req, res, next) => {
-  return requireRole(['owner', 'teacher'])(req, res, next);
+  return requireRole(['owner', 'admin', 'teacher'])(req, res, next);
 };
 
 /**

@@ -354,5 +354,203 @@ router.put('/sessions/:sessionId/cancel', async (req, res) => {
     }
 });
 
+
+/**
+ * POST /api/timetables/:id/expand
+ * 週パターンを指定期間に展開
+ */
+router.post('/:id/expand', async (req, res) => {
+    try {
+        // 管理者または教員のみ
+        if (req.user.role !== 'admin' && req.user.role !== 'owner' && req.user.role !== 'teacher') {
+            return res.status(403).json({
+                success: false,
+                message: '管理者または教員のみ週パターンを展開できます'
+            });
+        }
+
+        const { id } = req.params;
+        const { pattern, startDate, endDate, skipWeekends } = req.body;
+        const organizationId = req.user.organization_id || 1;
+
+        const result = await TimetableService.expandWeeklyPattern(
+            pattern,
+            startDate,
+            endDate,
+            parseInt(id),
+            { skipWeekends, organizationId }
+        );
+
+        res.json({
+            success: true,
+            message: '週パターンを展開しました',
+            data: result
+        });
+    } catch (error) {
+        console.error('週パターン展開エラー:', error);
+        res.status(400).json({
+            success: false,
+            message: '週パターンの展開に失敗しました',
+            error: error.message
+        });
+    }
+});
+
+/**
+ * PUT /api/timetables/sessions/:sessionId
+ * 授業セッションを更新（個別変更）
+ */
+router.put('/sessions/:sessionId', async (req, res) => {
+    try {
+        // 管理者または教員のみ
+        if (req.user.role !== 'admin' && req.user.role !== 'owner' && req.user.role !== 'teacher') {
+            return res.status(403).json({
+                success: false,
+                message: '管理者または教員のみ授業を更新できます'
+            });
+        }
+
+        const { sessionId } = req.params;
+        const updateData = req.body;
+        const userId = req.user.id;
+
+        const session = await TimetableService.updateClassSession(
+            parseInt(sessionId),
+            updateData,
+            userId
+        );
+
+        res.json({
+            success: true,
+            message: '授業セッションを更新しました',
+            data: session
+        });
+    } catch (error) {
+        console.error('授業セッション更新エラー:', error);
+        res.status(400).json({
+            success: false,
+            message: '授業セッションの更新に失敗しました',
+            error: error.message
+        });
+    }
+});
+
+/**
+ * POST /api/timetables/bulk-cancel
+ * 指定日の全授業を一括休講
+ */
+router.post('/bulk-cancel', async (req, res) => {
+    try {
+        // 管理者または教員のみ
+        if (req.user.role !== 'admin' && req.user.role !== 'owner' && req.user.role !== 'teacher') {
+            return res.status(403).json({
+                success: false,
+                message: '管理者または教員のみ一括休講を実行できます'
+            });
+        }
+
+        const { date, reason, groupId, timetableId } = req.body;
+        const organizationId = req.user.organization_id || 1;
+        const userId = req.user.id;
+
+        const result = await TimetableService.bulkCancelSessions(
+            date,
+            organizationId,
+            reason,
+            userId,
+            { groupId, timetableId }
+        );
+
+        res.json({
+            success: true,
+            message: '一括休講を実行しました',
+            data: result
+        });
+    } catch (error) {
+        console.error('一括休講エラー:', error);
+        res.status(400).json({
+            success: false,
+            message: '一括休講の実行に失敗しました',
+            error: error.message
+        });
+    }
+});
+
+/**
+ * POST /api/timetables/bulk-restore
+ * 指定日の一括休講を取り消し
+ */
+router.post('/bulk-restore', async (req, res) => {
+    try {
+        // 管理者または教員のみ
+        if (req.user.role !== 'admin' && req.user.role !== 'owner' && req.user.role !== 'teacher') {
+            return res.status(403).json({
+                success: false,
+                message: '管理者または教員のみ一括休講を取り消しできます'
+            });
+        }
+
+        const { date, groupId, timetableId } = req.body;
+        const organizationId = req.user.organization_id || 1;
+
+        const result = await TimetableService.bulkRestoreSessions(
+            date,
+            organizationId,
+            { groupId, timetableId }
+        );
+
+        res.json({
+            success: true,
+            message: '一括休講を取り消しました',
+            data: result
+        });
+    } catch (error) {
+        console.error('一括休講取り消しエラー:', error);
+        res.status(400).json({
+            success: false,
+            message: '一括休講の取り消しに失敗しました',
+            error: error.message
+        });
+    }
+});
+
+/**
+ * POST /api/timetables/:id/reapply-template
+ * テンプレートを再適用
+ */
+router.post('/:id/reapply-template', async (req, res) => {
+    try {
+        // 管理者または教員のみ
+        if (req.user.role !== 'admin' && req.user.role !== 'owner' && req.user.role !== 'teacher') {
+            return res.status(403).json({
+                success: false,
+                message: '管理者または教員のみテンプレートを再適用できます'
+            });
+        }
+
+        const { id } = req.params;
+        const { pattern, preserveManualChanges, startDate, endDate } = req.body;
+
+        const result = await TimetableService.reapplyTemplate(
+            parseInt(id),
+            pattern,
+            { preserveManualChanges, startDate, endDate }
+        );
+
+        res.json({
+            success: true,
+            message: 'テンプレートを再適用しました',
+            data: result
+        });
+    } catch (error) {
+        console.error('テンプレート再適用エラー:', error);
+        res.status(400).json({
+            success: false,
+            message: 'テンプレートの再適用に失敗しました',
+            error: error.message
+        });
+    }
+});
+
 module.exports = router;
 

@@ -296,50 +296,40 @@ class QRService {
 
       const sessions = await query(sessionSql, [studentId, currentDate, currentTime, currentTime]);
 
-      if (sessions.length === 0) {
-        await SecurityService.logScan({
-          qrCodeId: qrCodeInfo.id,
-          studentId,
-          ipAddress,
-          isAllowed: true,
-          userAgent,
-          result: 'error',
-          errorMessage: '現在時刻に該当する授業が見つかりません'
-        });
-
-        return {
-          success: false,
-          message: '現在時刻に該当する授業が見つかりません'
-        };
+      let session = null;
+      if (sessions.length > 0) {
+        session = sessions[0];
       }
 
-      const session = sessions[0];
+      // 旧ロジック: セッションが見つかった場合のみ従来の出欠記録を行う
+      // セッションがない場合（授業外）はスキップし、新しい時間ベース判定に任せる
+      if (session) {
+        // 4. 出欠ステータスを判定（時刻ベース）
+        const AttendanceService = require('./AttendanceService');
+        const status = await AttendanceService.determineAttendanceStatus(
+          scanTime,
+          session.start_time,
+          session.class_date
+        );
 
-      // 4. 出欠ステータスを判定（時刻ベース）
-      const AttendanceService = require('./AttendanceService');
-      const status = await AttendanceService.determineAttendanceStatus(
-        scanTime,
-        session.start_time,
-        session.class_date
-      );
+        // 5. 出欠記録を作成/更新
+        const recordSql = `
+          INSERT INTO detailed_attendance_records 
+          (student_id, class_id, attendance_date, status, check_in_time)
+          VALUES (?, ?, ?, ?, ?)
+          ON DUPLICATE KEY UPDATE 
+            status = VALUES(status),
+            check_in_time = VALUES(check_in_time)
+        `;
 
-      // 5. 出欠記録を作成/更新
-      const recordSql = `
-        INSERT INTO detailed_attendance_records 
-        (student_id, class_id, attendance_date, status, check_in_time)
-        VALUES (?, ?, ?, ?, ?)
-        ON DUPLICATE KEY UPDATE 
-          status = VALUES(status),
-          check_in_time = VALUES(check_in_time)
-      `;
-
-      await query(recordSql, [
-        studentId,
-        session.id,
-        currentDate,
-        status,
-        scanTime
-      ]);
+        await query(recordSql, [
+          studentId,
+          session.id,
+          currentDate,
+          status,
+          scanTime
+        ]);
+      }
 
       // 6. スキャンログに記録
       await SecurityService.logScan({
@@ -352,22 +342,49 @@ class QRService {
         errorMessage: null
       });
 
-      logger.info('QRスキャン成功', { studentId, sessionId: session.id, status });
+      // 7. 時間ベースの出欠判定ロジックを呼び出す
+      try {
+        const AttendanceService = require('./AttendanceService');
+        // ユーザーIDを取得
+        const user = await query('SELECT id FROM users WHERE student_id = ?', [studentId]);
+        if (user.length > 0) {
+          const userId = user[0].id;
+          const organizationId = qrCodeInfo.organization_id;
 
+          const attendanceResult = await AttendanceService.processAttendanceWithTimeCheck(
+            organizationId,
+            userId,
+            studentId,
+            session ? session.id : null
+          );
+
+          if (attendanceResult.success) {
+            return {
+              success: true,
+              message: attendanceResult.message,
+              data: {
+                status: attendanceResult.status,
+                location: qrCodeInfo.location_name,
+                logicalDate: attendanceResult.logicalDate
+              }
+            };
+          }
+        }
+      } catch (err) {
+        // 時間ベース判定エラーログ
+        logger.error('時間ベース判定エラー（QRスキャン中）:', err);
+      }
+
+      // フォールバック（時間判定で結果が返らなかった場合）
       return {
         success: true,
-        message: `出席を記録しました（${status === 'present' ? '出席' : status === 'late' ? '遅刻' : status}）`,
+        message: session ? '出席を記録しました' : '出席を確認しました（授業外）',
         data: {
-          status,
-          sessionInfo: {
-            subjectName: session.subject_name,
-            teacherName: session.teacher_name,
-            room: session.room,
-            startTime: session.start_time
-          },
+          status: 'present',
           location: qrCodeInfo.location_name
         }
       };
+
     } catch (error) {
       logger.error('QRスキャンエラー:', error);
       return {

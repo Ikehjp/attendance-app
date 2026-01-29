@@ -301,7 +301,7 @@ router.get('/:studentId/groups', authenticate, async (req, res) => {
     const { studentId } = req.params;
 
     // 権限チェック: 本人、教員、管理者のみ
-    if (req.user.role === 'student' && req.user.studentId !== studentId) {
+    if (req.user.role === 'student' && req.user.student_id !== studentId) {
       return res.status(403).json({
         success: false,
         message: '他の学生のグループ情報は閲覧できません'
@@ -337,7 +337,7 @@ router.post('/:studentId/groups/:groupId/respond', authenticate, [
     const { action } = req.body;
 
     // 権限チェック: 本人のみ
-    if (req.user.role === 'student' && req.user.studentId !== studentId) {
+    if (req.user.role === 'student' && req.user.student_id !== studentId) {
       return res.status(403).json({
         success: false,
         message: '他の学生の招待には応答できません'

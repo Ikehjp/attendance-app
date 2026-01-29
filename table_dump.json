@@ -1,0 +1,162 @@
+{
+  "slots": [
+    {
+      "id": 49,
+      "organization_id": 1,
+      "period_number": 1,
+      "period_name": "1限",
+      "start_time": "09:00:00",
+      "end_time": "10:30:00"
+    },
+    {
+      "id": 50,
+      "organization_id": 1,
+      "period_number": 2,
+      "period_name": "2限",
+      "start_time": "10:40:00",
+      "end_time": "12:10:00"
+    },
+    {
+      "id": 51,
+      "organization_id": 1,
+      "period_number": 3,
+      "period_name": "3限",
+      "start_time": "13:00:00",
+      "end_time": "14:30:00"
+    },
+    {
+      "id": 52,
+      "organization_id": 1,
+      "period_number": 4,
+      "period_name": "4限",
+      "start_time": "14:40:00",
+      "end_time": "16:10:00"
+    },
+    {
+      "id": 53,
+      "organization_id": 1,
+      "period_number": 5,
+      "period_name": "5限",
+      "start_time": "16:20:00",
+      "end_time": "17:50:00"
+    }
+  ],
+  "sessions": [
+    {
+      "id": 11,
+      "timetable_id": 1,
+      "subject_id": 4,
+      "class_date": "2026-01-28",
+      "period_number": 1,
+      "start_time": "09:05:00",
+      "end_time": "09:55:00",
+      "room": null,
+      "teacher_name": null,
+      "is_cancelled": 0,
+      "cancellation_reason": null,
+      "notes": null,
+      "created_at": "2026-01-26 10:57:43",
+      "updated_at": "2026-01-26 10:57:43",
+      "is_manually_modified": 0,
+      "original_subject_id": null,
+      "original_room": null,
+      "modified_at": null,
+      "modified_by": null
+    },
+    {
+      "id": 12,
+      "timetable_id": 1,
+      "subject_id": 1,
+      "class_date": "2026-01-28",
+      "period_number": 2,
+      "start_time": "10:05:00",
+      "end_time": "10:55:00",
+      "room": null,
+      "teacher_name": null,
+      "is_cancelled": 0,
+      "cancellation_reason": null,
+      "notes": null,
+      "created_at": "2026-01-26 10:57:43",
+      "updated_at": "2026-01-26 10:57:43",
+      "is_manually_modified": 0,
+      "original_subject_id": null,
+      "original_room": null,
+      "modified_at": null,
+      "modified_by": null
+    },
+    {
+      "id": 13,
+      "timetable_id": 1,
+      "subject_id": 1,
+      "class_date": "2026-01-28",
+      "period_number": 3,
+      "start_time": "11:05:00",
+      "end_time": "11:55:00",
+      "room": null,
+      "teacher_name": null,
+      "is_cancelled": 0,
+      "cancellation_reason": null,
+      "notes": null,
+      "created_at": "2026-01-26 10:57:43",
+      "updated_at": "2026-01-26 10:57:43",
+      "is_manually_modified": 0,
+      "original_subject_id": null,
+      "original_room": null,
+      "modified_at": null,
+      "modified_by": null
+    },
+    {
+      "id": 14,
+      "timetable_id": 1,
+      "subject_id": 2,
+      "class_date": "2026-01-28",
+      "period_number": 4,
+      "start_time": "13:05:00",
+      "end_time": "13:55:00",
+      "room": null,
+      "teacher_name": null,
+      "is_cancelled": 0,
+      "cancellation_reason": null,
+      "notes": null,
+      "created_at": "2026-01-26 10:57:43",
+      "updated_at": "2026-01-26 10:57:43",
+      "is_manually_modified": 0,
+      "original_subject_id": null,
+      "original_room": null,
+      "modified_at": null,
+      "modified_by": null
+    },
+    {
+      "id": 15,
+      "timetable_id": 1,
+      "subject_id": 2,
+      "class_date": "2026-01-28",
+      "period_number": 5,
+      "start_time": "14:05:00",
+      "end_time": "14:55:00",
+      "room": null,
+      "teacher_name": null,
+      "is_cancelled": 0,
+      "cancellation_reason": null,
+      "notes": null,
+      "created_at": "2026-01-26 10:57:43",
+      "updated_at": "2026-01-26 10:57:43",
+      "is_manually_modified": 0,
+      "original_subject_id": null,
+      "original_room": null,
+      "modified_at": null,
+      "modified_by": null
+    }
+  ],
+  "settings": [
+    {
+      "organization_id": 1,
+      "late_limit_minutes": 0,
+      "date_reset_time": "04:00:00",
+      "created_at": "2025-12-15 13:42:23",
+      "updated_at": "2026-01-29 09:18:24",
+      "school_start_time": "09:00:00",
+      "school_end_time": "18:00:00"
+    }
+  ]
+}

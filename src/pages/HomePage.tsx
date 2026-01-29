@@ -31,9 +31,9 @@ const HomePage: React.FC = () => {
         {/* ヘッダー */}
         <header className="home-header">
           <div className="home-header__content">
-            <h1 className="home-header__title">📚 出欠管理システム</h1>
+            <h1 className="home-header__title" translate="no">🔗 Link Up</h1>
             <p className="home-header__subtitle">
-              学生の出欠を効率的に管理するためのプラットフォーム
+              つながる、記録する、見える化する - スマートな出欠管理システム
             </p>
             <div className="home-header__actions">
               <button
@@ -58,50 +58,50 @@ const HomePage: React.FC = () => {
             <h2 className="home-features__title">主な機能</h2>
             <div className="home-features__grid">
               <div className="feature-card">
-                <div className="feature-card__icon">📋</div>
-                <h3 className="feature-card__title">出欠管理</h3>
+                <div className="feature-card__icon">💳</div>
+                <h3 className="feature-card__title">ICカード対応</h3>
                 <p className="feature-card__description">
-                  QRコードスキャンで簡単に出欠を記録。リアルタイムで学生の出席状況を管理できます。
-                </p>
-              </div>
-
-              <div className="feature-card">
-                <div className="feature-card__icon">👥</div>
-                <h3 className="feature-card__title">グループ管理</h3>
-                <p className="feature-card__description">
-                  クラスや授業ごとにグループを作成し、効率的な学生管理を実現します。
-                </p>
-              </div>
-
-              <div className="feature-card">
-                <div className="feature-card__icon">📊</div>
-                <h3 className="feature-card__title">レポート生成</h3>
-                <p className="feature-card__description">
-                  出席データを自動集計し、詳細なレポートを生成。データ分析が簡単にできます。
+                  Suica/PASMOなどのICカードを登録。カードリーダーにタッチするだけで出席登録が完了します。
                 </p>
               </div>
 
               <div className="feature-card">
                 <div className="feature-card__icon">📱</div>
-                <h3 className="feature-card__title">モバイル対応</h3>
+                <h3 className="feature-card__title">QRコード出席</h3>
                 <p className="feature-card__description">
-                  スマートフォンやタブレットからもアクセス可能。どこからでも出欠管理ができます。
+                  教員がQRコードを生成し、学生がスキャン。シンプルで確実な出席記録を実現します。
+                </p>
+              </div>
+
+              <div className="feature-card">
+                <div className="feature-card__icon">📝</div>
+                <h3 className="feature-card__title">欠席申請システム</h3>
+                <p className="feature-card__description">
+                  学生が欠席理由を申請し、教員が承認・却下。スムーズなコミュニケーションを実現します。
+                </p>
+              </div>
+
+              <div className="feature-card">
+                <div className="feature-card__icon">📅</div>
+                <h3 className="feature-card__title">時間割管理</h3>
+                <p className="feature-card__description">
+                  授業スケジュールを一元管理。週次・月次カレンダーで出席状況を可視化します。
+                </p>
+              </div>
+
+              <div className="feature-card">
+                <div className="feature-card__icon">📊</div>
+                <h3 className="feature-card__title">出席統計</h3>
+                <p className="feature-card__description">
+                  出席率や傾向をグラフで表示。データに基づいた学習支援が可能です。
                 </p>
               </div>
 
               <div className="feature-card">
                 <div className="feature-card__icon">🔔</div>
-                <h3 className="feature-card__title">通知機能</h3>
+                <h3 className="feature-card__title">リアルタイム通知</h3>
                 <p className="feature-card__description">
-                  重要な更新をリアルタイムで通知。欠席や遅刻の情報をすぐに確認できます。
-                </p>
-              </div>
-
-              <div className="feature-card">
-                <div className="feature-card__icon">🔒</div>
-                <h3 className="feature-card__title">セキュリティ</h3>
-                <p className="feature-card__description">
-                  JWT認証による安全なデータ管理。個人情報を適切に保護します。
+                  承認結果や重要な更新を即座に通知。見逃しを防ぎます。
                 </p>
               </div>
             </div>
@@ -144,7 +144,7 @@ const HomePage: React.FC = () => {
         <footer className="home-footer">
           <div className="container">
             <p className="home-footer__text">
-              © 2025 出欠管理システム. All rights reserved.
+              © 2026 Link Up. All rights reserved.
             </p>
           </div>
         </footer>

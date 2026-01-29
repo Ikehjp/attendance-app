@@ -33,9 +33,16 @@ router.post('/', authenticate, requireAdmin, [
     .withMessage('アクティブフラグは真偽値で入力してください')
 ], async (req, res) => {
   try {
+    // リクエストボディをログ
+    logger.info('科目作成リクエスト受信', { body: req.body });
+
     // バリデーションエラーのチェック
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
+      logger.warn('科目作成バリデーションエラー', {
+        errors: errors.array(),
+        body: req.body
+      });
       return res.status(400).json({
         success: false,
         message: '入力データにエラーがあります',
@@ -47,8 +54,10 @@ router.post('/', authenticate, requireAdmin, [
     const result = await SubjectService.createSubject(subjectData);
 
     if (result.success) {
+      logger.info('科目作成成功', { subjectData });
       res.status(201).json(result);
     } else {
+      logger.warn('科目作成失敗', { result });
       res.status(400).json(result);
     }
   } catch (error) {

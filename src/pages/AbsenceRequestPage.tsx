@@ -132,16 +132,10 @@ const AbsenceRequestPage: React.FC = () => {
           student_id: user?.student_id,
           type: newRequest.type,
           reason: newRequest.reason,
-          start_date: newRequest.start_date,
-          end_date: newRequest.end_date,
+          date: newRequest.start_date, // ← start_dateをdateとして送信
+          end_date: newRequest.end_date, // ← 終了日も送信
         },
-        // attachment // API might support attachment, checking absenceRequestApi definition... 
-        // absenceRequestApi.createRequest signature: (requestData: any) => Promise<ApiResponse>
-        // It converts requestData to formData if needed? 
-        // In verify: createRequest implementation in absenceRequestApi.ts. 
-        // I don't have absenceRequestApi.ts content handy but assumming it handles object. 
-        // If it needs file, I should pass it. 
-        // Let's assume standard object passing for now as per previous code attempt.
+        attachment, // ← ファイルも渡す
       );
 
       if (response.success) {

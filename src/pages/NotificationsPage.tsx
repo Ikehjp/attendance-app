@@ -26,7 +26,7 @@ const NotificationsPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [pendingCount, setPendingCount] = useState<number>(0);
 
-  const fetchNotifications = useCallback(async() => {
+  const fetchNotifications = useCallback(async () => {
     setLoading(true);
     try {
       const response = await notificationApi.getNotifications({ limit: 50 });
@@ -42,7 +42,7 @@ const NotificationsPage: React.FC = () => {
   }, []);
 
   // 管理者/教師向け: 承認待ち件数を取得
-  const fetchPendingCount = useCallback(async() => {
+  const fetchPendingCount = useCallback(async () => {
     if (!user || user.role === 'student') return;
 
     try {
@@ -63,7 +63,7 @@ const NotificationsPage: React.FC = () => {
     }
   }, [user, fetchNotifications, fetchPendingCount]);
 
-  const handleMarkAsRead = async(notificationId: number) => {
+  const handleMarkAsRead = async (notificationId: number) => {
     try {
       await notificationApi.markAsRead(notificationId);
       setNotifications(prev =>
@@ -74,7 +74,7 @@ const NotificationsPage: React.FC = () => {
     }
   };
 
-  const handleMarkAllAsRead = async() => {
+  const handleMarkAllAsRead = async () => {
     try {
       await notificationApi.markAllAsRead();
       setNotifications(prev => prev.map(n => ({ ...n, is_read: true })));
@@ -84,7 +84,7 @@ const NotificationsPage: React.FC = () => {
   };
 
   // 通知を削除
-  const handleDelete = async(e: React.MouseEvent, notificationId: number) => {
+  const handleDelete = async (e: React.MouseEvent, notificationId: number) => {
     e.stopPropagation(); // カードのクリックイベントを止める
     try {
       await notificationApi.deleteNotification(notificationId);
@@ -95,7 +95,7 @@ const NotificationsPage: React.FC = () => {
   };
 
   // 通知をクリックしたときのハンドラ
-  const handleNotificationClick = async(notification: Notification) => {
+  const handleNotificationClick = async (notification: Notification) => {
     // 未読なら既読に
     if (!notification.is_read) {
       await handleMarkAsRead(notification.id);
@@ -180,6 +180,16 @@ const NotificationsPage: React.FC = () => {
     }
   };
 
+  const translateText = (text: string) => {
+    if (!text) return '';
+    return text
+      .replace(/official_late/g, '公遅刻')
+      .replace(/early_leave/g, '早退')
+      .replace(/early_departure/g, '早退') // バックエンドの表記ゆれに対応
+      .replace(/late/g, '遅刻')
+      .replace(/absent/g, '欠席');
+  };
+
   const unreadCount = notifications.filter(n => !n.is_read).length;
 
   return (
@@ -258,8 +268,8 @@ const NotificationsPage: React.FC = () => {
                       {formatDateTime(notification.created_at)}
                     </span>
                   </div>
-                  <h3 className="notification-title">{notification.title}</h3>
-                  <p className="notification-message">{notification.message}</p>
+                  <h3 className="notification-title">{translateText(notification.title)}</h3>
+                  <p className="notification-message">{translateText(notification.message)}</p>
                   {getLinkLabel(notification.type) && (
                     <span className="notification-link">
                       {getLinkLabel(notification.type)}

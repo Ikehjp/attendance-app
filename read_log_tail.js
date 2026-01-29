@@ -1,0 +1,10 @@
+const fs = require('fs');
+const path = require('path');
+const logPath = path.join(__dirname, 'backend-nodejs', 'utils', 'logs', 'combined.log');
+const stats = fs.statSync(logPath);
+const bufferSize = 4096;
+const buffer = Buffer.alloc(bufferSize);
+const fd = fs.openSync(logPath, 'r');
+fs.readSync(fd, buffer, 0, bufferSize, Math.max(0, stats.size - bufferSize));
+fs.closeSync(fd);
+console.log(buffer.toString('utf8').split('\n').slice(-20).join('\n'));

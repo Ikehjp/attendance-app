@@ -1,7 +1,7 @@
 {
-  "short_name": "出欠管理",
-  "name": "出欠管理システム",
-  "description": "React × PWAによる出欠管理システム",
+  "short_name": "Link Up",
+  "name": "Link Up - 出欠管理システム",
+  "description": "ICカード対応のスマートな出欠管理システム",
   "icons": [
     {
       "src": "favicon.ico",
@@ -21,9 +21,12 @@
   ],
   "start_url": "/link-up/",
   "display": "standalone",
-  "theme_color": "#2196F3",
+  "theme_color": "#1E90FF",
   "background_color": "#ffffff",
   "orientation": "portrait",
   "scope": "/link-up/",
-  "categories": ["productivity", "education"]
+  "categories": [
+    "productivity",
+    "education"
+  ]
 }

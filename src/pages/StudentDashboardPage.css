@@ -518,3 +518,86 @@
     color: #f9fafb;
   }
 }
+
+/* -------------------------------------------
+   Mobile Responsive Enhancements
+   ------------------------------------------- */
+@media (max-width: 768px) {
+  .student-dashboard-page {
+    padding: 12px;
+    /* パディングを少し狭くしてコンテンツ領域確保 */
+  }
+
+  .student-dashboard-container {
+    border-radius: 12px;
+  }
+
+  /* ヘッダー周り */
+  .dashboard-header {
+    padding: 16px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  /* QRスキャンセクションを目立たせる */
+  .qr-scan-section {
+    padding: 24px 16px;
+  }
+
+  .qr-scan-section .btn--large {
+    width: 100%;
+    /* 全幅ボタン */
+    padding: 20px;
+    font-size: 1.1rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+  }
+
+  /* アイコンを追加して親しみやすくする（擬似要素） */
+  .qr-scan-section .btn--large::before {
+    content: "📷";
+    font-size: 1.25rem;
+  }
+
+  /* グループグリッド */
+  .groups-grid {
+    grid-template-columns: 1fr;
+    /* 1カラム強制 */
+    gap: 16px;
+  }
+
+  .group-card {
+    border-radius: 12px;
+  }
+
+  /* 招待状 */
+  .invitation-card {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 16px;
+  }
+
+  .invitation-actions {
+    width: 100%;
+    margin-left: 0;
+    display: flex;
+    gap: 8px;
+  }
+
+  .invitation-actions button {
+    flex: 1;
+    /* ボタンを均等幅に */
+    padding: 10px;
+    height: 44px;
+    /* タップ領域確保 */
+  }
+
+  /* 最近の活動 */
+  .activity-card {
+    padding: 16px;
+  }
+}

@@ -182,32 +182,40 @@ const StudentDashboardPage: React.FC = () => {
         setIsLoading(true);
         setError(null);
 
-        const response = await attendanceApi.recordScan(
+        const response = await attendanceApi.scanQRCodeWithValidation(
+          user?.student_id,
           scanData.qrData,
-          new Date().toISOString(),
         );
 
-        if (response.success && (response as any).requiresSelection) {
-          // 複数授業がある場合は選択UIを表示
-          setClassSelectionData(response.data);
-        } else if (response.success) {
+        if (response.success) {
           // 記録成功 - 結果をモーダルで表示
           setShowQRScanner(false);
           setClassSelectionData(null);
+
+          // 新しいAPIのレスポンス構造に対応
+          const resultData = (response as any).data || {};
+
           setAttendanceResult({
             success: true,
-            status: (response as any).status || 'present',
+            status: resultData.status || 'present',
             message: response.message || '出席を記録しました',
-            location: (response as any).location,
-            logicalDate: (response as any).logicalDate,
+            location: resultData.location,
+            logicalDate: resultData.logicalDate || new Date().toISOString().split('T')[0],
             time: new Date().toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' }),
           });
           await loadStudentData();
         } else {
-          setError(response.message || 'スキャンに失敗しました');
+          const msg = response.message || 'スキャンに失敗しました';
+          setError(msg);
+          alert(msg);
         }
-      } catch (err) {
-        setError('出欠記録の送信に失敗しました');
+
+      } catch (err: any) {
+        // エラーメッセージがあればそれを表示、なければデフォルトメッセージ
+        const errorMessage = err.message || '出欠記録の送信に失敗しました';
+        setError(errorMessage);
+        alert(errorMessage);
+
         // 開発環境でのみエラーログ出力
         if (process.env.NODE_ENV === 'development') {
           // eslint-disable-next-line no-console

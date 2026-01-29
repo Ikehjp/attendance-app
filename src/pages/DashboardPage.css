@@ -421,23 +421,29 @@
   }
 }
 
-/* Responsive Design - モバイル */
+/* Responsive Design - モバイル (修正版) */
 @media (max-width: 768px) {
   .dashboard-page {
-    padding: 1rem 0.75rem;
+    padding: 1rem;
   }
 
   .dashboard-title {
-    font-size: 2rem;
+    font-size: 1.75rem;
+    word-break: break-word;
+    /* 長いタイトル対策 */
   }
 
   .dashboard-grid {
-    grid-template-columns: 1fr;
-    gap: 1.25rem;
+    grid-template-columns: 1fr !important;
+    gap: 1rem;
     grid-auto-rows: auto;
+    display: flex;
+    /* グリッドではなくフレックスで縦積みを強制 */
+    flex-direction: column;
   }
 
-  /* モバイルでは全て1列に */
+  /* 全カードを幅100%に */
+  .dashboard-card,
   .dashboard-card.today-status,
   .dashboard-card.calendar-card,
   .dashboard-card.monthly-stats,
@@ -445,38 +451,64 @@
   .dashboard-card.quick-actions-card {
     grid-column: span 1;
     grid-row: auto;
+    width: 100%;
+    margin-bottom: 0;
+    /* flex gapで制御 */
   }
 
   .dashboard-card {
-    padding: 1.5rem;
+    padding: 1.25rem;
+    height: auto !important;
+    /* コンテンツに合わせて高さ調整 */
+    min-height: auto !important;
   }
 
   .dashboard-card.today-status {
-    padding: 2rem 1.5rem;
+    padding: 1.5rem 1.25rem;
   }
 
   .attendance-times {
     grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .time-item {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
   }
 
   .status-badge {
     font-size: 1.25rem;
     padding: 0.75rem 1.5rem;
+    width: 100%;
+    /* 全幅 */
+    text-align: center;
   }
 
   .error-message {
     flex-direction: column;
     align-items: stretch;
-    gap: 0.75rem;
+    gap: 1rem;
+    padding: 1rem;
   }
 
   .retry-button {
     margin-left: 0;
     width: 100%;
+    padding: 12px;
+    height: 44px;
+    /* タップ領域確保 */
   }
 
   .quick-actions {
     grid-template-columns: 1fr;
+    /* クイックアクションも縦積み */
+  }
+
+  .quick-actions button {
+    height: 44px;
+    /* タップ領域確保 */
   }
 
   .stat-value {

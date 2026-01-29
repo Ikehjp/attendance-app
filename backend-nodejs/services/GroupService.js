@@ -1,5 +1,6 @@
 const { query, transaction } = require('../config/database');
 const logger = require('../utils/logger');
+const NotificationService = require('./NotificationService');
 
 /**
  * グループ管理サービス
@@ -27,7 +28,7 @@ class GroupService {
         (organization_id, name, icon, description, created_by, is_active) 
         VALUES (?, ?, ?, ?, ?, ?)
       `;
-      
+
       const params = [
         organizationId,      // 追加
         data.name,
@@ -278,12 +279,14 @@ class GroupService {
   static async addMember(id, studentId, inviterId) {
     try {
       const result = await transaction(async (conn) => {
-        const groups = await query('SELECT id FROM `groups` WHERE id = ?', [id], conn);
+        const groups = await query('SELECT id, name FROM `groups` WHERE id = ?', [id], conn);
         if (groups.length === 0) throw new Error('グループが見つかりません');
+
+        const groupName = groups[0].name;
 
         // studentsテーブルとusersテーブルの両方を確認
         const students = await query('SELECT student_id FROM students WHERE student_id = ?', [studentId], conn);
-        const usersWithStudentId = await query('SELECT name, email FROM users WHERE student_id = ?', [studentId], conn);
+        const usersWithStudentId = await query('SELECT id, name, email FROM users WHERE student_id = ?', [studentId], conn);
 
         if (students.length === 0) {
           if (usersWithStudentId.length === 0) {
@@ -314,6 +317,19 @@ class GroupService {
           [id, studentId, inviterId, 'pending'],
           conn
         );
+
+        // ✨ 通知を作成
+        if (usersWithStudentId.length > 0) {
+          const userId = usersWithStudentId[0].id;
+          await NotificationService.createNotification({
+            user_id: userId,
+            title: 'グループ招待',
+            message: `「${groupName}」に招待されました`,
+            type: 'group_invitation',
+            priority: 'high'
+          });
+          logger.info('グループ招待通知を作成しました', { groupId: id, userId, studentId });
+        }
 
         return {
           success: true,

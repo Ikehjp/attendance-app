@@ -10,6 +10,7 @@ export { absenceRequestApi } from './absenceRequestApi';
 export { timetableApi } from './timetableApi';
 export { securityApi } from './securityApi';
 export { notificationApi } from './notificationApi';
+export { subjectApi } from './subjectApi';
 
 // デフォルトエクスポート（後方互換性のため）
 import { attendanceApi } from './attendanceApi';

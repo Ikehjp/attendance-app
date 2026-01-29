@@ -30,24 +30,6 @@ const AbsenceListModal: React.FC<AbsenceListModalProps> = ({ isOpen, onClose, da
   const [activeTab, setActiveTab] = useState<'absent' | 'late' | 'early_departure'>('absent');
   const navigate = useNavigate();
 
-  // ポータル用のコンテナを作成（Hooksは条件分岐の前に配置）
-  const [portalContainer] = useState<HTMLDivElement>(() => {
-    const div = document.createElement('div');
-    div.id = `absence-list-modal-portal-${Date.now()}`;
-    return div;
-  });
-
-  useEffect(() => {
-    if (isOpen) {
-      document.body.appendChild(portalContainer);
-    }
-    return () => {
-      if (document.body.contains(portalContainer)) {
-        document.body.removeChild(portalContainer);
-      }
-    };
-  }, [portalContainer, isOpen]);
-
   // 早期リターンは全てのHooksの後に配置
   if (!isOpen || !absenceData) return null;
 
@@ -71,7 +53,7 @@ const AbsenceListModal: React.FC<AbsenceListModalProps> = ({ isOpen, onClose, da
 
   const activeTabData = tabs.find(t => t.key === activeTab);
 
-  return ReactDOM.createPortal(
+  const modalContent = (
     <div className="absence-list-overlay" onClick={onClose}>
       <div className="absence-list-modal" onClick={(e) => e.stopPropagation()}>
         <div className="absence-list-header">
@@ -129,9 +111,14 @@ const AbsenceListModal: React.FC<AbsenceListModalProps> = ({ isOpen, onClose, da
           )}
         </div>
       </div>
-    </div >,
-    portalContainer,
+    </div>
   );
+
+  // モーダルルートを取得
+  const modalRoot = document.getElementById('modal-root');
+  if (!modalRoot) return null;
+
+  return ReactDOM.createPortal(modalContent, modalRoot);
 };
 
 export default AbsenceListModal;

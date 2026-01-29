@@ -763,3 +763,88 @@
 .calendar-day.saturday {
   background-color: rgba(239, 246, 255, 0.4);
 }
+
+/* View Switcher Styles */
+.view-controls {
+  display: flex;
+  gap: 4px;
+  background: #f1f5f9;
+  padding: 4px;
+  border-radius: 8px;
+  margin: 0 16px;
+}
+
+.view-button {
+  padding: 6px 12px;
+  border: none;
+  background: transparent;
+  color: #64748b;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.view-button.active {
+  background: white;
+  color: #3b82f6;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+}
+
+.view-button:hover:not(.active) {
+  background: rgba(255,255,255,0.5);
+  color: #475569;
+}
+
+/* Navigation adjustments */
+.calendar-navigation {
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.nav-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.current-period {
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: #1e293b;
+  min-width: 140px;
+  text-align: center;
+}
+
+/* Responsive adjustments */
+@media (max-width: 640px) {
+  .view-controls {
+    order: 3;
+    width: 100%;
+    justify-content: center;
+    margin: 8px 0;
+  }
+  .current-period {
+    width: 100%;
+    order: 1;
+    margin-bottom: 8px;
+  }
+  .nav-controls {
+    order: 2;
+    width: 100%;
+    justify-content: space-between;
+  }
+}
+
+/* 莉頑律縺ｮ譌･莉倥・繧ｹ繧ｿ繧､繝ｫ */
+.calendar-day.today {
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.15) 0%, rgba(96, 165, 250, 0.2) 100%) !important;
+    border: 2px solid #3b82f6 !important;
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
+}
+
+.calendar-day.today .day-number {
+    font-weight: 700;
+    color: #1e40af;
+}

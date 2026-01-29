@@ -10,11 +10,12 @@ export const absenceRequestApi = {
    * @param {File} file - 添付ファイル（オプション）
    * @returns {Promise} 作成結果
    */
-  createRequest: async(data: any, file: File | null = null): Promise<ApiResponse> => {
+  createRequest: async (data: any, file: File | null = null): Promise<ApiResponse> => {
     // バックエンドが期待するフィールド名に変換
     const requestBody = {
       type: data.requestType || data.type,
       date: data.requestDate || data.date,
+      endDate: data.endDate || data.end_date, // 終了日を追加
       reason: data.reason,
       classSessionId: data.classId || data.classSessionId,
     };
@@ -23,6 +24,9 @@ export const absenceRequestApi = {
       const formData = new FormData();
       formData.append('type', requestBody.type);
       formData.append('date', requestBody.date);
+      if (requestBody.endDate) {
+        formData.append('endDate', requestBody.endDate);
+      }
       formData.append('reason', requestBody.reason);
       if (requestBody.classSessionId) {
         formData.append('classSessionId', requestBody.classSessionId);
@@ -41,7 +45,7 @@ export const absenceRequestApi = {
    * @param {Object} filters - フィルタ条件
    * @returns {Promise} 申請一覧
    */
-  getRequestsByStudent: async(studentId: number | string, filters: any = {}): Promise<ApiResponse> => {
+  getRequestsByStudent: async (studentId: number | string, filters: any = {}): Promise<ApiResponse> => {
     return (await apiClient.get(`/absence-requests/student/${studentId}`, {
       params: filters,
     })) as unknown as ApiResponse;
@@ -53,7 +57,7 @@ export const absenceRequestApi = {
    * @param {Object} filters - フィルタ条件
    * @returns {Promise} 申請一覧
    */
-  getPendingRequestsForTeacher: async(teacherId: number | string, filters: any = {}): Promise<ApiResponse> => {
+  getPendingRequestsForTeacher: async (teacherId: number | string, filters: any = {}): Promise<ApiResponse> => {
     return (await apiClient.get(`/absence-requests/teacher/${teacherId}`, {
       params: filters,
     })) as unknown as ApiResponse;
@@ -64,7 +68,7 @@ export const absenceRequestApi = {
    * @param {Object} filters - フィルタ条件
    * @returns {Promise} 申請一覧
    */
-  getAllRequests: async(filters: any = {}): Promise<ApiResponse> => {
+  getAllRequests: async (filters: any = {}): Promise<ApiResponse> => {
     return (await apiClient.get('/absence-requests/all', {
       params: filters,
     })) as unknown as ApiResponse;
@@ -75,7 +79,7 @@ export const absenceRequestApi = {
    * @param {number} requestId - 申請ID
    * @returns {Promise} 申請詳細
    */
-  getRequest: async(requestId: number | string): Promise<ApiResponse> => {
+  getRequest: async (requestId: number | string): Promise<ApiResponse> => {
     return (await apiClient.get(`/absence-requests/${requestId}`)) as unknown as ApiResponse;
   },
 
@@ -84,7 +88,7 @@ export const absenceRequestApi = {
    * @param {number} requestId - 申請ID
    * @returns {Promise} キャンセル結果
    */
-  cancelRequest: async(requestId: number | string): Promise<ApiResponse> => {
+  cancelRequest: async (requestId: number | string): Promise<ApiResponse> => {
     return (await apiClient.delete(`/absence-requests/${requestId}`)) as unknown as ApiResponse;
   },
 
@@ -94,7 +98,7 @@ export const absenceRequestApi = {
    * @param {string} comment - コメント（オプション）
    * @returns {Promise} 承認結果
    */
-  approveRequest: async(requestId: number | string, comment: string = ''): Promise<ApiResponse> => {
+  approveRequest: async (requestId: number | string, comment: string = ''): Promise<ApiResponse> => {
     return (await apiClient.post(`/approvals/${requestId}/approve`, { comment })) as unknown as ApiResponse;
   },
 
@@ -104,7 +108,7 @@ export const absenceRequestApi = {
    * @param {string} comment - コメント（必須）
    * @returns {Promise} 却下結果
    */
-  rejectRequest: async(requestId: number | string, comment: string): Promise<ApiResponse> => {
+  rejectRequest: async (requestId: number | string, comment: string): Promise<ApiResponse> => {
     return (await apiClient.post(`/approvals/${requestId}/reject`, { comment })) as unknown as ApiResponse;
   },
 
@@ -113,7 +117,7 @@ export const absenceRequestApi = {
    * @param {number} requestId - 申請ID
    * @returns {Promise} 承認履歴
    */
-  getApprovalHistory: async(requestId: number | string): Promise<ApiResponse> => {
+  getApprovalHistory: async (requestId: number | string): Promise<ApiResponse> => {
     return (await apiClient.get(`/approvals/${requestId}/history`)) as unknown as ApiResponse;
   },
 };

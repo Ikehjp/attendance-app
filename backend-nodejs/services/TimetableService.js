@@ -14,18 +14,18 @@ class TimetableService {
      */
     static async createTimetable(timetableData) {
         try {
-            const { groupId, academicYear, semester, startDate, endDate } = timetableData;
+            const { groupId, name, academicYear, semester, startDate, endDate } = timetableData;
 
             if (!groupId || !academicYear || !startDate || !endDate) {
                 throw new Error('必須フィールドが不足しています');
             }
 
             const sql = `
-        INSERT INTO timetables (group_id, academic_year, semester, start_date, end_date, is_active)
-        VALUES (?, ?, ?, ?, ?, TRUE)
+        INSERT INTO timetables (group_id, name, academic_year, semester, start_date, end_date, is_active)
+        VALUES (?, ?, ?, ?, ?, ?, TRUE)
       `;
 
-            const result = await query(sql, [groupId, academicYear, semester, startDate, endDate]);
+            const result = await query(sql, [groupId, name || null, academicYear, semester, startDate, endDate]);
 
             return await this.getTimetable(result.insertId);
         } catch (error) {
@@ -43,7 +43,7 @@ class TimetableService {
         try {
             const sql = `
         SELECT 
-          t.id, t.group_id, t.academic_year, t.semester,
+          t.id, t.group_id, t.name, t.academic_year, t.semester,
           t.start_date, t.end_date, t.is_active, t.created_at, t.updated_at,
           g.name as group_name
         FROM timetables t
@@ -73,7 +73,7 @@ class TimetableService {
         try {
             const sql = `
         SELECT 
-          id, group_id, academic_year, semester,
+          id, group_id, name, academic_year, semester,
           start_date, end_date, is_active, created_at, updated_at
         FROM timetables
         WHERE group_id = ?
@@ -218,13 +218,15 @@ class TimetableService {
      */
     static async getTimetableByPeriod(groupId, periodType, startDate, endDate) {
         try {
+            logger.debug('期間別時間割取得', { groupId, periodType, startDate, endDate });
+
             const sql = `
         SELECT 
           cs.id, cs.timetable_id, cs.subject_id, cs.class_date,
           cs.period_number, cs.start_time, cs.end_time, cs.room,
           cs.teacher_name, cs.is_cancelled, cs.notes,
           s.subject_name, s.subject_code,
-          t.academic_year, t.semester
+          t.academic_year, t.semester, t.group_id
         FROM class_sessions cs
         JOIN timetables t ON cs.timetable_id = t.id
         JOIN subjects s ON cs.subject_id = s.id
@@ -232,7 +234,9 @@ class TimetableService {
         ORDER BY cs.class_date, cs.period_number
       `;
 
-            return await query(sql, [groupId, startDate, endDate]);
+            const results = await query(sql, [groupId, startDate, endDate]);
+            logger.debug('期間別時間割取得結果', { groupId, resultCount: results.length });
+            return results;
         } catch (error) {
             logger.error('期間別時間割取得エラー:', error);
             throw error;
@@ -410,24 +414,28 @@ class TimetableService {
     static async getOrganizationSettings(organizationId) {
         try {
             // organization_settings テーブルから設定を取得
-            let settings = { late_limit_minutes: 15, date_reset_time: '04:00:00' };
+            let settings = {
+                late_limit_minutes: 15,
+                date_reset_time: '04:00:00',
+                school_start_time: '09:00:00',
+                school_end_time: '16:00:00'
+            };
+
             try {
                 const settingsSql = `
-                    SELECT late_limit_minutes, date_reset_time
+                    SELECT late_limit_minutes, date_reset_time, school_start_time, school_end_time
                     FROM organization_settings
                     WHERE organization_id = ?
                 `;
                 const settingsResult = await query(settingsSql, [organizationId]);
                 logger.info('organization_settings クエリ結果', {
                     organizationId,
-                    resultCount: settingsResult.length,
-                    data: settingsResult
+                    resultCount: settingsResult.length
                 });
                 if (settingsResult.length > 0) {
                     settings = settingsResult[0];
                 }
             } catch (settingsError) {
-                // テーブルが存在しない場合はデフォルト値を使用
                 logger.warn('organization_settings テーブルエラー:', settingsError.message);
             }
 
@@ -454,20 +462,35 @@ class TimetableService {
                 timeSlotsCount: timeSlots.length
             });
 
-            // timeSlotsをキャメルケースに変換
+            // timeSlotsをキャメルケースに変換し、HH:MM形式に整形
             const formattedTimeSlots = timeSlots.map(slot => ({
                 id: slot.id,
                 periodNumber: slot.period_number,
                 periodName: slot.period_name,
-                startTime: slot.start_time,
-                endTime: slot.end_time
+                startTime: typeof slot.start_time === 'string' && slot.start_time.length > 5 ? slot.start_time.substring(0, 5) : slot.start_time,
+                endTime: typeof slot.end_time === 'string' && slot.end_time.length > 5 ? slot.end_time.substring(0, 5) : slot.end_time
             }));
+
+            // データがない場合のデフォルト値（フォールバック）
+            if (formattedTimeSlots.length === 0) {
+                const defaultSlots = [
+                    { periodNumber: 1, periodName: '1限', startTime: '09:00', endTime: '10:30' },
+                    { periodNumber: 2, periodName: '2限', startTime: '10:40', endTime: '12:10' },
+                    { periodNumber: 3, periodName: '3限', startTime: '13:00', endTime: '14:30' },
+                    { periodNumber: 4, periodName: '4限', startTime: '14:40', endTime: '16:10' },
+                    { periodNumber: 5, periodName: '5限', startTime: '16:20', endTime: '17:50' },
+                ];
+                formattedTimeSlots.push(...defaultSlots);
+                logger.info('時限データがないためデフォルト値を使用します');
+            }
 
             return {
                 success: true,
                 data: {
-                    lateLimitMinutes: settings.late_limit_minutes || 15,
+                    lateLimitMinutes: (settings.late_limit_minutes !== null && settings.late_limit_minutes !== undefined) ? settings.late_limit_minutes : 15,
                     dateResetTime: settings.date_reset_time || '04:00:00',
+                    schoolStartTime: settings.school_start_time || '09:00:00',
+                    schoolEndTime: settings.school_end_time || '16:00:00',
                     timeSlots: formattedTimeSlots
                 }
             };
@@ -485,29 +508,39 @@ class TimetableService {
      */
     static async saveOrganizationSettings(organizationId, settings) {
         try {
-            const { lateLimitMinutes, dateResetTime, timeSlots } = settings;
+            const { lateLimitMinutes, dateResetTime, schoolStartTime, schoolEndTime, timeSlots } = settings;
 
             // organization_settings テーブルに設定を保存（UPSERT）
-            // テーブルが存在しない場合は作成を試みる
             try {
-                const checkTable = await query(`
+                // テーブル作成（存在しない場合）
+                await query(`
                     CREATE TABLE IF NOT EXISTS organization_settings (
                         organization_id INT PRIMARY KEY,
                         late_limit_minutes INT DEFAULT 15,
                         date_reset_time TIME DEFAULT '04:00:00',
+                        school_start_time TIME DEFAULT '09:00:00',
+                        school_end_time TIME DEFAULT '16:00:00',
                         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
                     )
                 `);
 
                 // 設定を挿入または更新
+                const safeLateLimitMinutes = (lateLimitMinutes !== undefined && lateLimitMinutes !== null) ? lateLimitMinutes : 15;
+                const safeDateResetTime = dateResetTime || '04:00:00';
+                const safeSchoolStartTime = schoolStartTime || '09:00:00';
+                const safeSchoolEndTime = schoolEndTime || '16:00:00';
+
                 await query(`
-                    INSERT INTO organization_settings (organization_id, late_limit_minutes, date_reset_time)
-                    VALUES (?, ?, ?)
+                    INSERT INTO organization_settings (organization_id, late_limit_minutes, date_reset_time, school_start_time, school_end_time)
+                    VALUES (?, ?, ?, ?, ?)
                     ON DUPLICATE KEY UPDATE 
                         late_limit_minutes = VALUES(late_limit_minutes),
-                        date_reset_time = VALUES(date_reset_time)
-                `, [organizationId, lateLimitMinutes || 15, dateResetTime || '04:00:00']);
+                        date_reset_time = VALUES(date_reset_time),
+                        school_start_time = VALUES(school_start_time),
+                        school_end_time = VALUES(school_end_time)
+                `, [organizationId, safeLateLimitMinutes, safeDateResetTime, safeSchoolStartTime, safeSchoolEndTime]);
+
             } catch (orgSettingsError) {
                 logger.warn('organization_settings テーブルへの保存スキップ:', orgSettingsError.message);
             }
@@ -577,6 +610,520 @@ class TimetableService {
         } catch (error) {
             logger.error('時限検索エラー:', error);
             return null;
+        }
+    }
+
+    // ========================================
+    // 週パターン展開・個別編集関連メソッド（新規追加）
+    // ========================================
+
+    /**
+     * 週パターンを指定期間に展開
+     * @param {Object} pattern - 週パターン（曜日ごとの授業配置）
+     * @param {string} startDate - 開始日 (YYYY-MM-DD)
+     * @param {string} endDate - 終了日 (YYYY-MM-DD)
+     * @param {number} timetableId - 時間割ID
+     * @param {Object} options - オプション（skipWeekends, skipHolidays等）
+     * @returns {Promise<Object>} 展開結果
+     */
+    static async expandWeeklyPattern(pattern, startDate, endDate, timetableId, options = {}) {
+        try {
+            const { skipWeekends = true, organizationId } = options;
+
+            if (!pattern || !startDate || !endDate || !timetableId) {
+                throw new Error('必須パラメータが不足しています');
+            }
+
+            // デバッグ: 入力パラメータをログ
+            logger.info('週パターン展開開始', {
+                pattern: JSON.stringify(pattern),
+                startDate,
+                endDate,
+                timetableId,
+                skipWeekends,
+                organizationId
+            });
+
+            let createdCount = 0;
+            let skippedCount = 0;
+            let weekendSkippedCount = 0;
+            let existingSkippedCount = 0;
+            let noPatternDays = 0;
+            const errors = [];
+
+            // 日付範囲をループ
+            const start = new Date(startDate);
+            const end = new Date(endDate);
+
+            await transaction(async (conn) => {
+                const currentDate = new Date(start);
+
+                while (currentDate <= end) {
+                    const dayOfWeek = currentDate.getDay(); // 0=日曜, 1=月曜, ...
+                    const dateStr = currentDate.toISOString().split('T')[0];
+
+                    // 週末スキップオプション
+                    if (skipWeekends && (dayOfWeek === 0 || dayOfWeek === 6)) {
+                        currentDate.setDate(currentDate.getDate() + 1);
+                        weekendSkippedCount++;
+                        continue;
+                    }
+
+                    // 曜日に対応するパターンを取得（1=月曜, 2=火曜, ... に変換）
+                    const dayKey = dayOfWeek === 0 ? 7 : dayOfWeek; // 日曜を7に
+                    const dayPattern = pattern[dayKey] || pattern[dayKey.toString()];
+
+                    logger.debug('日付処理', {
+                        date: dateStr,
+                        dayOfWeek,
+                        dayKey,
+                        hasPattern: !!dayPattern,
+                        patternLength: dayPattern?.length || 0
+                    });
+
+                    if (dayPattern && Array.isArray(dayPattern)) {
+                        for (const session of dayPattern) {
+                            try {
+                                // 既存の同じ日付・時限のセッションがあるかチェック
+                                // conn.execute() は [rows, fields] を返すので分割代入で取得
+                                const [existingRows] = await conn.execute(`
+                                    SELECT id FROM class_sessions 
+                                    WHERE timetable_id = ? AND class_date = ? AND period_number = ?
+                                `, [timetableId, dateStr, session.periodNumber]);
+
+                                if (existingRows.length > 0) {
+                                    logger.debug('既存セッションのためスキップ', {
+                                        date: dateStr,
+                                        periodNumber: session.periodNumber,
+                                        existingId: existingRows[0].id
+                                    });
+                                    existingSkippedCount++;
+                                    skippedCount++;
+                                    continue;
+                                }
+
+                                // 授業セッションを作成
+                                const insertSql = `
+                                    INSERT INTO class_sessions 
+                                    (timetable_id, subject_id, class_date, period_number, 
+                                     start_time, end_time, room, teacher_name)
+                                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                                `;
+
+                                await conn.execute(insertSql, [
+                                    timetableId,
+                                    session.subjectId,
+                                    dateStr,
+                                    session.periodNumber,
+                                    session.startTime,
+                                    session.endTime,
+                                    session.room || null,
+                                    session.teacherName || null
+                                ]);
+
+                                logger.debug('セッション作成成功', {
+                                    date: dateStr,
+                                    periodNumber: session.periodNumber,
+                                    subjectId: session.subjectId
+                                });
+
+                                createdCount++;
+                            } catch (sessionError) {
+                                logger.error('セッション作成エラー', {
+                                    date: dateStr,
+                                    session,
+                                    error: sessionError.message
+                                });
+                                errors.push({
+                                    date: dateStr,
+                                    session,
+                                    error: sessionError.message
+                                });
+                            }
+                        }
+                    } else {
+                        noPatternDays++;
+                    }
+
+                    currentDate.setDate(currentDate.getDate() + 1);
+                }
+            });
+
+            logger.info('週パターン展開完了', {
+                createdCount,
+                skippedCount,
+                weekendSkippedCount,
+                existingSkippedCount,
+                noPatternDays,
+                errorCount: errors.length
+            });
+
+            return {
+                success: true,
+                createdCount,
+                skippedCount,
+                totalDays: Math.ceil((end - start) / (1000 * 60 * 60 * 24)) + 1,
+                errors: errors.length > 0 ? errors : null
+            };
+        } catch (error) {
+            logger.error('週パターン展開エラー:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * 授業セッションを更新（個別変更フラグを設定）
+     * @param {number} sessionId - セッションID
+     * @param {Object} updateData - 更新データ
+     * @param {number} userId - 変更者のユーザーID
+     * @returns {Promise<Object>} 更新後のセッション
+     */
+    static async updateClassSession(sessionId, updateData, userId = null) {
+        try {
+            // 現在のセッション情報を取得
+            const currentSession = await this.getClassSession(sessionId);
+
+            if (!currentSession) {
+                throw new Error('授業セッションが見つかりません');
+            }
+
+            const {
+                subjectId,
+                room,
+                teacherName,
+                startTime,
+                endTime,
+                notes
+            } = updateData;
+
+            // 変更があるかチェック
+            const hasSubjectChange = subjectId && subjectId !== currentSession.subject_id;
+            const hasRoomChange = room !== undefined && room !== currentSession.room;
+            const hasAnyChange = hasSubjectChange || hasRoomChange ||
+                teacherName !== undefined || startTime || endTime || notes !== undefined;
+
+            if (!hasAnyChange) {
+                return currentSession;
+            }
+
+            // 更新SQLを構築
+            let updateFields = [];
+            let params = [];
+
+            if (subjectId) {
+                updateFields.push('subject_id = ?');
+                params.push(subjectId);
+
+                // 元の科目IDを保存（初回変更時のみ）
+                if (!currentSession.original_subject_id) {
+                    updateFields.push('original_subject_id = ?');
+                    params.push(currentSession.subject_id);
+                }
+            }
+
+            if (room !== undefined) {
+                updateFields.push('room = ?');
+                params.push(room);
+
+                // 元の教室を保存（初回変更時のみ）
+                if (!currentSession.original_room) {
+                    updateFields.push('original_room = ?');
+                    params.push(currentSession.room);
+                }
+            }
+
+            if (teacherName !== undefined) {
+                updateFields.push('teacher_name = ?');
+                params.push(teacherName);
+            }
+
+            if (startTime) {
+                updateFields.push('start_time = ?');
+                params.push(startTime);
+            }
+
+            if (endTime) {
+                updateFields.push('end_time = ?');
+                params.push(endTime);
+            }
+
+            if (notes !== undefined) {
+                updateFields.push('notes = ?');
+                params.push(notes);
+            }
+
+            // 個別変更フラグと変更情報を設定
+            updateFields.push('is_manually_modified = 1');
+            updateFields.push('modified_at = NOW()');
+
+            if (userId) {
+                updateFields.push('modified_by = ?');
+                params.push(userId);
+            }
+
+            params.push(sessionId);
+
+            const sql = `
+                UPDATE class_sessions 
+                SET ${updateFields.join(', ')}
+                WHERE id = ?
+            `;
+
+            await query(sql, params);
+
+            logger.info('授業セッション更新完了', { sessionId, userId, hasSubjectChange, hasRoomChange });
+
+            return await this.getClassSession(sessionId);
+        } catch (error) {
+            logger.error('授業セッション更新エラー:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * 指定日の全授業を一括休講
+     * @param {string} date - 日付 (YYYY-MM-DD)
+     * @param {number} organizationId - 組織ID
+     * @param {string} reason - 休講理由
+     * @param {number} userId - 変更者ID
+     * @param {Object} options - オプション（groupId等で絞り込み可能）
+     * @returns {Promise<Object>} 更新結果
+     */
+    static async bulkCancelSessions(date, organizationId, reason, userId = null, options = {}) {
+        try {
+            const { groupId, timetableId } = options;
+
+            let sql = `
+                UPDATE class_sessions cs
+                JOIN timetables t ON cs.timetable_id = t.id
+                SET cs.is_cancelled = 1, 
+                    cs.cancellation_reason = ?,
+                    cs.modified_at = NOW()
+            `;
+
+            const params = [reason];
+
+            if (userId) {
+                sql = sql.replace('cs.modified_at = NOW()', 'cs.modified_at = NOW(), cs.modified_by = ?');
+                params.push(userId);
+            }
+
+            sql += ` WHERE cs.class_date = ? AND cs.organization_id = ?`;
+            params.push(date, organizationId);
+
+            if (groupId) {
+                sql += ' AND t.group_id = ?';
+                params.push(groupId);
+            }
+
+            if (timetableId) {
+                sql += ' AND cs.timetable_id = ?';
+                params.push(timetableId);
+            }
+
+            const result = await query(sql, params);
+
+            logger.info('一括休講完了', {
+                date,
+                organizationId,
+                affectedRows: result.affectedRows,
+                reason
+            });
+
+            return {
+                success: true,
+                affectedCount: result.affectedRows,
+                date,
+                reason
+            };
+        } catch (error) {
+            logger.error('一括休講エラー:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * 指定日の一括休講を取り消し
+     * @param {string} date - 日付 (YYYY-MM-DD)
+     * @param {number} organizationId - 組織ID
+     * @param {Object} options - オプション
+     * @returns {Promise<Object>} 更新結果
+     */
+    static async bulkRestoreSessions(date, organizationId, options = {}) {
+        try {
+            const { groupId, timetableId } = options;
+
+            let sql = `
+                UPDATE class_sessions cs
+                JOIN timetables t ON cs.timetable_id = t.id
+                SET cs.is_cancelled = 0, 
+                    cs.cancellation_reason = NULL,
+                    cs.modified_at = NOW()
+                WHERE cs.class_date = ? AND cs.organization_id = ?
+            `;
+
+            const params = [date, organizationId];
+
+            if (groupId) {
+                sql += ' AND t.group_id = ?';
+                params.push(groupId);
+            }
+
+            if (timetableId) {
+                sql += ' AND cs.timetable_id = ?';
+                params.push(timetableId);
+            }
+
+            const result = await query(sql, params);
+
+            logger.info('一括休講取り消し完了', {
+                date,
+                organizationId,
+                affectedRows: result.affectedRows
+            });
+
+            return {
+                success: true,
+                affectedCount: result.affectedRows,
+                date
+            };
+        } catch (error) {
+            logger.error('一括休講取り消しエラー:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * テンプレートを再適用（手動変更をスキップ可能）
+     * @param {number} timetableId - 時間割ID
+     * @param {Object} pattern - 週パターン
+     * @param {Object} options - オプション
+     * @returns {Promise<Object>} 再適用結果
+     */
+    static async reapplyTemplate(timetableId, pattern, options = {}) {
+        try {
+            const { preserveManualChanges = true, startDate, endDate } = options;
+
+            if (!timetableId || !pattern) {
+                throw new Error('必須パラメータが不足しています');
+            }
+
+            let updatedCount = 0;
+            let skippedCount = 0;
+            let deletedCount = 0;
+            const errors = [];
+
+            // 時間割情報を取得
+            const timetable = await this.getTimetable(timetableId);
+
+            const rangeStart = startDate || timetable.start_date;
+            const rangeEnd = endDate || timetable.end_date;
+
+            await transaction(async (conn) => {
+                // 既存セッションを取得
+                let existingSql = `
+                    SELECT id, class_date, period_number, is_manually_modified,
+                           subject_id, room, teacher_name
+                    FROM class_sessions
+                    WHERE timetable_id = ? AND class_date BETWEEN ? AND ?
+                `;
+
+                if (preserveManualChanges) {
+                    existingSql += ' AND is_manually_modified = 0';
+                }
+
+                const existingSessions = await conn.query(existingSql, [timetableId, rangeStart, rangeEnd]);
+
+                // 手動変更でないセッションを削除
+                if (existingSessions.length > 0) {
+                    const sessionIds = existingSessions.map(s => s.id);
+                    await conn.query(`DELETE FROM class_sessions WHERE id IN (?)`, [sessionIds]);
+                    deletedCount = sessionIds.length;
+                }
+
+                // 手動変更されたセッションの日付・時限を取得（重複回避のため）
+                const manualSessions = await conn.query(`
+                    SELECT class_date, period_number FROM class_sessions
+                    WHERE timetable_id = ? AND is_manually_modified = 1
+                `, [timetableId]);
+
+                const manualSessionKeys = new Set(
+                    manualSessions.map(s => `${s.class_date.toISOString().split('T')[0]}_${s.period_number}`)
+                );
+
+                // 新しいパターンで再作成
+                const start = new Date(rangeStart);
+                const end = new Date(rangeEnd);
+                const currentDate = new Date(start);
+
+                while (currentDate <= end) {
+                    const dayOfWeek = currentDate.getDay();
+
+                    // 週末スキップ
+                    if (dayOfWeek === 0 || dayOfWeek === 6) {
+                        currentDate.setDate(currentDate.getDate() + 1);
+                        continue;
+                    }
+
+                    const dayKey = dayOfWeek === 0 ? 7 : dayOfWeek;
+                    const dayPattern = pattern[dayKey] || pattern[dayKey.toString()];
+
+                    if (dayPattern && Array.isArray(dayPattern)) {
+                        for (const session of dayPattern) {
+                            const dateStr = currentDate.toISOString().split('T')[0];
+                            const sessionKey = `${dateStr}_${session.periodNumber}`;
+
+                            // 手動変更済みセッションがある場合はスキップ
+                            if (manualSessionKeys.has(sessionKey)) {
+                                skippedCount++;
+                                continue;
+                            }
+
+                            try {
+                                await conn.query(`
+                                    INSERT INTO class_sessions 
+                                    (timetable_id, subject_id, class_date, period_number,
+                                     start_time, end_time, room, teacher_name, is_manually_modified)
+                                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0)
+                                `, [
+                                    timetableId,
+                                    session.subjectId,
+                                    dateStr,
+                                    session.periodNumber,
+                                    session.startTime,
+                                    session.endTime,
+                                    session.room || null,
+                                    session.teacherName || null
+                                ]);
+                                updatedCount++;
+                            } catch (err) {
+                                errors.push({ date: dateStr, session, error: err.message });
+                            }
+                        }
+                    }
+
+                    currentDate.setDate(currentDate.getDate() + 1);
+                }
+            });
+
+            logger.info('テンプレート再適用完了', {
+                timetableId,
+                updatedCount,
+                skippedCount,
+                deletedCount
+            });
+
+            return {
+                success: true,
+                updatedCount,
+                skippedCount,
+                deletedCount,
+                preservedManualChanges: preserveManualChanges,
+                errors: errors.length > 0 ? errors : null
+            };
+        } catch (error) {
+            logger.error('テンプレート再適用エラー:', error);
+            throw error;
         }
     }
 }

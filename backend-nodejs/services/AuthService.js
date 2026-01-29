@@ -84,9 +84,14 @@ class AuthService {
       };
     } catch (error) {
       logger.error('ログインエラー:', error.message);
+
+      // 本番環境では詳細なエラーを隠す
+      const isProduction = process.env.NODE_ENV === 'production';
       return {
         success: false,
-        message: 'サーバーエラーが発生しました'
+        message: isProduction
+          ? 'ログイン処理中にエラーが発生しました'
+          : `サーバーエラー: ${error.message}`
       };
     }
   }
@@ -323,9 +328,13 @@ class AuthService {
         }
       });
 
+      // 本番環境では詳細なエラーを隠す
+      const isProduction = process.env.NODE_ENV === 'production';
       return {
         success: false,
-        message: 'サーバーエラーが発生しました'
+        message: isProduction
+          ? 'アカウント作成中にエラーが発生しました'
+          : `サーバーエラー: ${error.message}`
       };
     }
   }
@@ -378,57 +387,57 @@ class AuthService {
   }
 
   // ... (changePassword, updateProfile はそのままでOK) ...
-  
+
   static async changePassword(userId, currentPassword, newPassword) {
-      // (省略:元のコードのまま)
-      try {
-        const users = await query(
-          'SELECT password FROM users WHERE id = ?',
-          [userId]
-        );
-  
-        if (users.length === 0) {
-          return {
-            success: false,
-            message: 'ユーザーが見つかりません'
-          };
-        }
-  
-        const user = users[0];
-  
-        const isCurrentPasswordValid = await bcrypt.compare(currentPassword, user.password);
-        if (!isCurrentPasswordValid) {
-          return {
-            success: false,
-            message: '現在のパスワードが正しくありません'
-          };
-        }
-  
-        const hashedNewPassword = await bcrypt.hash(newPassword, 10);
-  
-        await query(
-          'UPDATE users SET password = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
-          [hashedNewPassword, userId]
-        );
-  
-        logger.info('パスワード変更成功', { userId });
-  
-        return {
-          success: true,
-          message: 'パスワードが変更されました'
-        };
-      } catch (error) {
-        logger.error('パスワード変更エラー:', error.message);
+    // (省略:元のコードのまま)
+    try {
+      const users = await query(
+        'SELECT password FROM users WHERE id = ?',
+        [userId]
+      );
+
+      if (users.length === 0) {
         return {
           success: false,
-          message: 'サーバーエラーが発生しました'
+          message: 'ユーザーが見つかりません'
         };
       }
+
+      const user = users[0];
+
+      const isCurrentPasswordValid = await bcrypt.compare(currentPassword, user.password);
+      if (!isCurrentPasswordValid) {
+        return {
+          success: false,
+          message: '現在のパスワードが正しくありません'
+        };
+      }
+
+      const hashedNewPassword = await bcrypt.hash(newPassword, 10);
+
+      await query(
+        'UPDATE users SET password = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+        [hashedNewPassword, userId]
+      );
+
+      logger.info('パスワード変更成功', { userId });
+
+      return {
+        success: true,
+        message: 'パスワードが変更されました'
+      };
+    } catch (error) {
+      logger.error('パスワード変更エラー:', error.message);
+      return {
+        success: false,
+        message: 'サーバーエラーが発生しました'
+      };
     }
-  
-    static async updateProfile(userId, updateData) {
-      // (省略:元のコードのまま)
-      logger.info('=== プロフィール更新開始 ===', { userId, updateData });
+  }
+
+  static async updateProfile(userId, updateData) {
+    // (省略:元のコードのまま)
+    logger.info('=== プロフィール更新開始 ===', { userId, updateData });
 
     try {
       const allowedFields = ['name', 'email', 'department', 'student_id'];

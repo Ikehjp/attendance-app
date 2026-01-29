@@ -83,7 +83,7 @@ const Header: React.FC = () => {
     e.preventDefault();
 
     const activeToken = storeToken || localStorage.getItem('authToken') || localStorage.getItem('token');
-    
+
     // console.log(...) は削除しました
 
     if (activeToken) {
@@ -91,7 +91,7 @@ const Header: React.FC = () => {
     } else {
       alert('チャットへのログインに必要な情報が見つかりません。一度ログアウトして再ログインしてください。');
     }
-    
+
     if (isMobileMenuOpen) {
       closeMobileMenu();
     }
@@ -99,7 +99,7 @@ const Header: React.FC = () => {
   // ▲▲▲ 修正ここまで ▲▲▲
 
   // 未読通知数を取得
-  const fetchUnreadCount = useCallback(async() => {
+  const fetchUnreadCount = useCallback(async () => {
     if (!isAuthenticated) return;
     try {
       const response = await notificationApi.getNotifications({ limit: 50 });
@@ -116,8 +116,12 @@ const Header: React.FC = () => {
 
   useEffect(() => {
     fetchUnreadCount();
-    // 30秒ごとに更新
-    const interval = setInterval(fetchUnreadCount, 30000);
+    // 60秒ごとに更新（タブがアクティブな時のみ）
+    const interval = setInterval(() => {
+      if (document.visibilityState === 'visible') {
+        fetchUnreadCount();
+      }
+    }, 60000);
     return () => clearInterval(interval);
   }, [fetchUnreadCount]);
 
@@ -216,7 +220,7 @@ const Header: React.FC = () => {
             {isAuthenticated && (
               <div className="nav-links-left desktop-only">
                 <NavLink to="/dashboard" className={getLinkClass}>ダッシュボード</NavLink>
-                
+
                 <button
                   type="button"
                   onClick={handleChatClick}
@@ -352,7 +356,7 @@ const Header: React.FC = () => {
                     <NavLink to="/calendar" className={getMobileLinkClass} onClick={closeMobileMenu}>
                       カレンダー
                     </NavLink>
-                    
+
                     <button
                       type="button"
                       onClick={handleChatClick}

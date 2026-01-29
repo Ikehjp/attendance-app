@@ -25,28 +25,32 @@ function errorLog(msg, err) {
   fs.appendFileSync(LOG_FILE, `ERROR: ${msg}\n${err.message}\n${err.stack}\n`);
 }
 
-// ▼▼▼ 自動退勤バッチ（毎日 23:59 に実行） ▼▼▼
-cron.schedule('59 23 * * *', async () => {
-  console.log('🕒 [自動退勤] バッチ処理を開始します...');
-  try {
-    // 条件: 「今日の日付」で、「退勤時刻が入っていない（またはstatusが出席のまま）」のレコードを更新
-    // ここでは status が 'present' のものを 'auto_left' (自動退勤) に変更する例です
-    
-    const result = await query(
-      `UPDATE user_attendance_records 
-       SET status = 'auto_left', updated_at = NOW() 
-       WHERE date = CURDATE() AND status = 'present'`
-    );
-    
-    console.log(`✅ [自動退勤] ${result.affectedRows} 件のデータを自動退勤扱いにしました`);
-  } catch (error) {
-    console.error('❌ [自動退勤] エラーが発生しました', error);
-  }
-});
+// 環境変数のバリデーション
+function validateEnvironmentVariables() {
+  const required = ['DB_HOST', 'DB_USER', 'DB_NAME', 'JWT_SECRET'];
+  const missing = required.filter(key => !process.env[key]);
 
-log('========================================');
-log('サーバー起動開始...');
-log('========================================\n');
+  if (missing.length > 0) {
+    const errorMsg = `❌ Missing required environment variables: ${missing.join(', ')}`;
+    errorLog(errorMsg, new Error('Environment validation failed'));
+    throw new Error(errorMsg);
+  }
+
+  log('✅ Environment variables validation passed');
+}
+
+// 環境変数のバリデーションを実行
+try {
+  validateEnvironmentVariables();
+} catch (error) {
+  console.error('\n========================================');
+  console.error('STARTUP FAILED: Missing required environment variables');
+  console.error('========================================');
+  console.error('Please configure the following in your .env file:');
+  console.error('  - DB_HOST, DB_USER, DB_NAME, JWT_SECRET');
+  console.error('========================================\n');
+  process.exit(1);
+}
 
 // ルートのインポート（エラーハンドリング付き）
 function loadRoute(routeName, routePath) {
@@ -97,7 +101,7 @@ try {
   const attendanceV2Routes = loadRoute('Attendance V2', './routes/attendance-v2');
   const adminRoutes = loadRoute('Admin', './routes/admin');
   const ipSettingsRoutes = loadRoute('IP Settings', './routes/ip-settings');
-  
+
   // ★ここに移動しました★
   const icCardRoutes = loadRoute('IC Card', './routes/ic-card');
 
@@ -121,12 +125,38 @@ try {
   // プロキシ経由のリクエストを信頼（X-Forwarded-For対応）
   app.set('trust proxy', 1);
 
+  // CORS設定（環境変数ベース）
+  const allowedOrigins = process.env.CORS_ORIGIN
+    ? process.env.CORS_ORIGIN.split(',').map(origin => origin.trim())
+    : ['http://localhost:3000', 'http://localhost:3001', 'http://192.168.12.120:3000'];
+
+  // 末尾のスラッシュを削除する関数
+  const normalizeOrigin = (origin) => origin ? origin.replace(/\/$/, '') : origin;
+
   app.use(cors({
-    origin: [
-      'http://localhost:3000',
-      'http://192.168.12.120:3000',
-      process.env.CORS_ORIGIN
-    ].filter(Boolean),
+    origin: function (origin, callback) {
+      // デバッグ: originの値をログ出力
+      logger.debug('CORS request from origin:', { origin, allowedOrigins });
+
+      // undefinedの場合はサーバー間通信またはPostmanなどのツール（許可）
+      if (!origin) {
+        logger.debug('CORS: No origin header (same-origin or tools)');
+        return callback(null, true);
+      }
+
+      // 末尾のスラッシュを除去して比較
+      const normalizedOrigin = normalizeOrigin(origin);
+      const normalizedAllowedOrigins = allowedOrigins.map(o => normalizeOrigin(o));
+
+      // 許可リストに含まれるかチェック
+      if (normalizedAllowedOrigins.indexOf(normalizedOrigin) !== -1) {
+        logger.debug('CORS: Origin allowed', { origin: normalizedOrigin });
+        callback(null, true);
+      } else {
+        logger.warn('CORS: Blocked request from origin', { origin: normalizedOrigin, allowedOrigins: normalizedAllowedOrigins });
+        callback(new Error('Not allowed by CORS'));
+      }
+    },
     credentials: true,
     optionsSuccessStatus: 200
   }));
@@ -150,7 +180,7 @@ try {
 
   // --- ルーティング ---
   app.use('/api/auth', authRoutes);
-  
+
   // ★ここに移動しました★
   app.use('/api/ic-card', icCardRoutes);
 
@@ -197,24 +227,24 @@ try {
   app.use(errorHandler);
 
   // ▼▼▼ 自動退勤バッチ（毎日 23:59 に実行） ▼▼▼
-cron.schedule('59 23 * * *', async () => {
-  console.log('🕒 [自動退勤] バッチ処理を開始します...');
-  try {
-    // 条件: 「今日の日付」で、「退勤時刻が入っていない（またはstatusが出席のまま）」のレコードを更新
-    // ここでは status が 'present' のものを 'auto_left' (自動退勤) に変更する例です
-    
-    const result = await query(
-      `UPDATE user_attendance_records 
+  cron.schedule('59 23 * * *', async () => {
+    console.log('🕒 [自動退勤] バッチ処理を開始します...');
+    try {
+      // 条件: 「今日の日付」で、「退勤時刻が入っていない（またはstatusが出席のまま）」のレコードを更新
+      // ここでは status が 'present' のものを 'auto_left' (自動退勤) に変更する例です
+
+      const result = await query(
+        `UPDATE user_attendance_records 
        SET status = 'auto_left', updated_at = NOW() 
        WHERE date = CURDATE() AND status = 'present'`
-    );
-    
-    console.log(`✅ [自動退勤] ${result.affectedRows} 件のデータを自動退勤扱いにしました`);
-  } catch (error) {
-    console.error('❌ [自動退勤] エラーが発生しました', error);
-  }
-});
-  
+      );
+
+      console.log(`✅ [自動退勤] ${result.affectedRows} 件のデータを自動退勤扱いにしました`);
+    } catch (error) {
+      console.error('❌ [自動退勤] エラーが発生しました', error);
+    }
+  });
+
   // --- サーバー起動 ---
   const startServer = async () => {
     try {

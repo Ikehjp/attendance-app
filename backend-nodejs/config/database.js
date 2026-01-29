@@ -23,6 +23,7 @@ const pool = mysql.createPool({
 
   // タイムアウト設定
   connectTimeout: parseInt(process.env.DB_CONNECT_TIMEOUT) || 10 * 1000, // 10秒
+  acquireTimeout: parseInt(process.env.DB_ACQUIRE_TIMEOUT) || 10 * 1000, // 10秒
 
   // その他設定
   dateStrings: true,
