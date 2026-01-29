@@ -101,9 +101,8 @@ try {
   const attendanceV2Routes = loadRoute('Attendance V2', './routes/attendance-v2');
   const adminRoutes = loadRoute('Admin', './routes/admin');
   const ipSettingsRoutes = loadRoute('IP Settings', './routes/ip-settings');
-
-  // ★ここに移動しました★
   const icCardRoutes = loadRoute('IC Card', './routes/ic-card');
+  const workspaceRoutes = loadRoute('Workspace', './routes/workspaces');
 
   log('\n✅ 全ルートの読み込み完了\n');
 
@@ -183,7 +182,7 @@ try {
 
   // ★ここに移動しました★
   app.use('/api/ic-card', icCardRoutes);
-
+  app.use('/api/workspaces', workspaceRoutes);
   app.use('/api/users', userRoutes);
   app.use('/api/attendance', attendanceStatsRoutes); // 統計エンドポイント
   app.use('/api/attendance', attendanceRoutes);
